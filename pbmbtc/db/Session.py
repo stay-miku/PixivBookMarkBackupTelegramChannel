@@ -42,7 +42,14 @@ class Illust(Base):
     page_count = Column(Integer)            # 张数
     ai = Column(Integer)                    # ai类型
     detial = Column(String)                 # 作品详细信息,为json字符串(实际上就是pixiv api返回的值)
-    backup = Column(Integer)                # 是否已备份
+    backup = Column(Integer, index=True)    # 是否已备份 用于检索未备份作品
+    unavailable = Column(Integer, index=True)           # 作品是否失效(删除或者受限) 即使失效也需要备份(一个提示作品失效消息)
+    saved = Column(Integer, index=True)     # 是否备份成功(已备份但是因作品失效而备份失败)
+
+# backup = 1 unavailable = 0 saved = 1 正常已备份状态
+# backup = 1 unavailable = 1 saved = ? 不执行
+# backup = 0 unavailable = ? saved = ? 执行备份操作  unavailable = 1 => saved = 0 并发送一个提示消息
+# backup = 1 unavailable = 0 saved = 0 执行备份操作 saved = 1 删除提示消息
 
 
 class Channel(Base):
@@ -55,7 +62,7 @@ class PreviewBackup(Base):
     __tablename__ = "illust_backup_previews"
 
     message = Column(String, primary_key=True)                              # chat_id + message_id
-    id = Column(String, ForeignKey(f"{Illust.__tablename__}.id"))           # 作品id
+    id = Column(String, ForeignKey(f"{Illust.__tablename__}.id"), index=True)           # 作品id
     channel = Column(String, ForeignKey(f"{Channel.__tablename__}.id"))     # channel id
     message_id = Column(String, index=True)                                 # 对应消息id
 
@@ -64,7 +71,7 @@ class Backup(Base):
     __tablename__ = "illust_backups"
 
     message = Column(String, primary_key=True)                              # chat_id + message_id
-    id = Column(String, ForeignKey(f"{Illust.__tablename__}.id"))           # 作品id
+    id = Column(String, ForeignKey(f"{Illust.__tablename__}.id"), index=True)           # 作品id
     channel = Column(String, ForeignKey(f"{Channel.__tablename__}.id"))     # channel id
     message_id = Column(String, index=True)                                 # 对应消息id
 
