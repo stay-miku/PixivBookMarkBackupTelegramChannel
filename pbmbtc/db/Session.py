@@ -1,11 +1,24 @@
+import contextlib
+
 from sqlalchemy import Column, String, create_engine, Integer, ForeignKey
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+import sqlalchemy.orm
+# from sqlalchemy.orm import declarative_base
+import os
+
+
+database_path = "data/"
+debug = False
+
+if not os.path.exists(database_path):
+    os.makedirs(database_path)
 
 
 Base = declarative_base()
 
 
+# 正常情况下这个表只有一行
 class Bot(Base):
     __tablename__ = "bots"
 
@@ -23,11 +36,13 @@ class Illust(Base):
     comment = Column(String)                # 作品描述,由画师设置
     tags = Column(String)                   # tag 格式为tag=>translated_tag=>translated_tag \n tag=>translated_tag \n tag ...
     upload_date = Column(String)            # 上传时间
-    user_id = Column(String)                # 作者id
+    user_id = Column(String, index=True)    # 作者id
     user_name = Column(String)              # 作者昵称
-    user_account = Column(String)           # 作者用户名
+    user_account = Column(String, index=True)           # 作者用户名
     page_count = Column(Integer)            # 张数
     ai = Column(Integer)                    # ai类型
+    detial = Column(String)                 # 作品详细信息,为json字符串(实际上就是pixiv api返回的值)
+    backup = Column(Integer)                # 是否已备份
 
 
 class Channel(Base):
@@ -39,15 +54,38 @@ class Channel(Base):
 class PreviewBackup(Base):
     __tablename__ = "illust_backup_previews"
 
+    message = Column(String, primary_key=True)                              # chat_id + message_id
     id = Column(String, ForeignKey(f"{Illust.__tablename__}.id"))           # 作品id
     channel = Column(String, ForeignKey(f"{Channel.__tablename__}.id"))     # channel id
-    message_id = Column(String)                                             # 对应消息id
+    message_id = Column(String, index=True)                                 # 对应消息id
 
 
 class Backup(Base):
     __tablename__ = "illust_backups"
 
+    message = Column(String, primary_key=True)                              # chat_id + message_id
     id = Column(String, ForeignKey(f"{Illust.__tablename__}.id"))           # 作品id
     channel = Column(String, ForeignKey(f"{Channel.__tablename__}.id"))     # channel id
-    message_id = Column(String)                                             # 对应消息id
+    message_id = Column(String, index=True)                                 # 对应消息id
+
+
+engine = create_engine(f"sqlite:///{database_path}data.db", echo=debug)
+
+Base.metadata.create_all(engine)
+
+Session = sessionmaker(bind=engine)
+
+
+@contextlib.contextmanager
+def start_session() -> sqlalchemy.orm.Session:
+    s = Session()
+    try:
+        yield s
+        s.commit()
+    except Exception as e:
+        s.rollback()
+        raise e
+    finally:
+        s.close()
+
 
