@@ -1,6 +1,10 @@
 import requests
 import json
 import copy
+import logging
+
+logger = logging.getLogger("metadata")
+logger.setLevel(logging.DEBUG)
 
 
 # 通用header
@@ -22,6 +26,8 @@ referer = "https://www.pixiv.net/artworks/{}"
 
 # 获取动图数据
 def get_ugoira_meta(pid: str, cookie: str):
+    logger.debug(f"ugoira meta: pid: {pid}")
+
     h = copy.deepcopy(header)
     h["cookie"] = cookie
     h["referer"] = referer.format(pid)
@@ -38,6 +44,8 @@ def get_ugoira_meta(pid: str, cookie: str):
 
 # 获取作品数据
 def get_illust_meta(pid: str, cookie: str):
+    logger.debug(f"illust meta: pid: {pid}")
+
     h = copy.deepcopy(header)
     h["cookie"] = cookie
     h["referer"] = referer.format(pid)
@@ -53,6 +61,8 @@ def get_illust_meta(pid: str, cookie: str):
 
 
 def get_pages(pid: str, cookie: str):
+    logger.debug(f"pages meta(for illust): pid: {pid}")
+
     h = copy.deepcopy(header)
     h["referer"] = referer.format(pid)
     h["cookie"] = cookie

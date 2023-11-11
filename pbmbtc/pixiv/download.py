@@ -1,5 +1,9 @@
 import requests
 import copy
+import logging
+
+logger = logging.getLogger("download")
+logger.setLevel(logging.DEBUG)
 
 
 header = {
@@ -18,6 +22,7 @@ header = {
 
 # 图片的bytes,需自行根据链接判断图片格式
 def image_download(url: str) -> bytes:
+    logger.debug(f"image download: url: {url}")
     # 不管怎么样把看起来比较有用的都塞进去~
     h = copy.deepcopy(header)
 
@@ -30,6 +35,7 @@ def image_download(url: str) -> bytes:
 
 # 按理返回的是一个压缩包,需要后续处理
 def ugoira_download(url: str) -> bytes:
+    logger.debug(f"ugoira download: url: {url}")
 
     h = copy.deepcopy(header)
     h["origin"] = "https://www.pixiv.net"

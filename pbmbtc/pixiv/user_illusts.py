@@ -1,8 +1,14 @@
 import requests
 import json
+import logging
+
+logger = logging.getLogger("user_illust")
+logger.setLevel(logging.DEBUG)
 
 
 def get_user_illusts(pid: str, cookie: str):
+    logger.debug(f"pid: {pid}")
+
     header = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
         "referer": "https://www.pixiv.net/users/{}/artworks".format(pid),

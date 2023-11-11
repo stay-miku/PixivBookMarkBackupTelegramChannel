@@ -12,6 +12,7 @@ def init():
         api_key = input("Bot api key:")
         admin = input("The telegram id of the bot administrator:")
         cookie = input("The pixiv account cookie:")
+        # config
 
         bot = db.Bot(key=api_key, admin=admin, cookie=cookie)
         session.add(bot)

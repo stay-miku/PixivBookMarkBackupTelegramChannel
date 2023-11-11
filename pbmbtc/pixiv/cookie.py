@@ -1,6 +1,10 @@
 import requests
 import json
 from lxml import etree
+import logging
+
+logger = logging.getLogger("cookie")
+logger.setLevel(logging.DEBUG)
 
 
 # 验证cookie可用性,可用会返回一个包含账号id和账号名的字典,否则抛出Exception
@@ -27,5 +31,6 @@ def cookie_verify(cookie: str):
     user_data = json.loads(content[0])["userData"]
     if user_data is None:
         raise Exception("cookie无效,需要更换cookie")
+    logger.debug(f"userId: {user_data['id']}, userName: {user_data['pixivId']}")
     return {"userId": user_data["id"], "userName": user_data["pixivId"]}
 

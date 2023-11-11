@@ -1,5 +1,9 @@
 import requests
 import json
+import logging
+
+logger = logging.getLogger("bookmarks")
+logger.setLevel(logging.DEBUG)
 
 
 # 单页作品数量,可以决定获取收藏时连接次数(设太高谁知道会发生生么)
@@ -27,8 +31,11 @@ def get_bookmarks(cookie: str, user: str):
     page = 1
     bookmarks = {"total": 0, "illust": []}
 
+    logger.debug(f"user: {user}")
+
     # 分页循环获取所有收藏作品
     while 1:
+        logger.debug(f"page: {page}")
         response = requests.get("https://www.pixiv.net/ajax/user/{}/illusts/bookmarks?tag=&offset={}&limit={}&rest=show"
                                 .format(user, str((page - 1) * one_page_count), str(one_page_count)), headers=header)
         if response.status_code != 200:
@@ -38,6 +45,7 @@ def get_bookmarks(cookie: str, user: str):
             raise Exception("Get bookmarks: " + json_data["message"])
         if total == 0:
             total = json_data["body"]["total"]
+            logger.debug(f"total: {total}")
         bookmarks["illust"] += json_data["body"]["works"]
         if page * one_page_count >= total:
             break

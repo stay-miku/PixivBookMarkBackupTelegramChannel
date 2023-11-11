@@ -27,6 +27,15 @@ class Bot(Base):
     cookie = Column(String)                 # pixiv cookie
 
 
+# 配置表,正常情况只有一行,config配置会在程序启动时载入,运行时修改需要重启生效
+class Config(Base):
+    __tablename__ = "config"
+
+    id = Column(Integer, primary_key=True)
+    gif_preview = Column(Integer)           # 使用转化为gif的动图作为动图作品的预览(否则动图第一帧为预览)
+    tmp_path = Column(String)               # 临时文件储存文件夹(如动图生成时临时存放图片帧和结果)(尽量将所有操作在内存中完成,所以内存占用可能不低www)
+
+
 class Illust(Base):
     __tablename__ = "illusts"
 
