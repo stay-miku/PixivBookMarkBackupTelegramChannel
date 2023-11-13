@@ -1,4 +1,5 @@
-import requests
+# import requests
+import httpx
 import copy
 import logging
 
@@ -21,12 +22,13 @@ header = {
 
 
 # 图片的bytes,需自行根据链接判断图片格式
-def image_download(url: str) -> bytes:
+async def image_download(url: str) -> bytes:
     logger.debug(f"image download: url: {url}")
     # 不管怎么样把看起来比较有用的都塞进去~
     h = copy.deepcopy(header)
 
-    response = requests.get(url, headers=h)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=h)
     if response.status_code != 200:
         raise Exception(f"Image download: Error status code: {response.status_code}")
 
@@ -34,7 +36,7 @@ def image_download(url: str) -> bytes:
 
 
 # 按理返回的是一个压缩包,需要后续处理
-def ugoira_download(url: str) -> bytes:
+async def ugoira_download(url: str) -> bytes:
     logger.debug(f"ugoira download: url: {url}")
 
     h = copy.deepcopy(header)
@@ -42,7 +44,8 @@ def ugoira_download(url: str) -> bytes:
     h["sec-fetch-dest"] = "empty"
     h["accept"] = "*/*"
 
-    response = requests.get(url, headers=h)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=h)
     if response.status_code != 200:
         raise Exception(f"Download ugoira: Error status code: {response.status_code}")
 

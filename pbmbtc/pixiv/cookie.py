@@ -1,4 +1,5 @@
-import requests
+# import requests
+import httpx
 import json
 from lxml import etree
 import logging
@@ -8,7 +9,7 @@ logger.setLevel(logging.DEBUG)
 
 
 # 验证cookie可用性,可用会返回一个包含账号id和账号名的字典,否则抛出Exception
-def cookie_verify(cookie: str):
+async def cookie_verify(cookie: str):
     header = {
         "cookie": cookie,
         "referer": "https://www.pixiv.net/",
@@ -23,7 +24,8 @@ def cookie_verify(cookie: str):
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
                   "application/signed-exchange;v=b3;q=0.7"
     }
-    response = requests.get("https://www.pixiv.net/", headers=header)
+    async with httpx.AsyncClient() as client:
+        response = await client.get("https://www.pixiv.net/", headers=header)
     if response.status_code != 200:
         raise Exception(f"Cookie verify: Error status code{response.status_code}")
     http = response.content.decode("utf-8")

@@ -1,10 +1,10 @@
-import requests
+# import requests
+import httpx
 import json
 import logging
 
 logger = logging.getLogger("bookmarks")
 logger.setLevel(logging.DEBUG)
-
 
 # 单页作品数量,可以决定获取收藏时连接次数(设太高谁知道会发生生么)
 one_page_count = 48
@@ -12,7 +12,7 @@ one_page_count = 48
 
 # 获取收藏列表返回字典
 # 鉴于收藏与更新的不同,只能每次获取所有收藏然后遍历(反正收藏更新频率要求没那么高www)
-def get_bookmarks(cookie: str, user: str):
+async def get_bookmarks(cookie: str, user: str):
     header = {
         "cookie": cookie,
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) C"
@@ -36,8 +36,10 @@ def get_bookmarks(cookie: str, user: str):
     # 分页循环获取所有收藏作品
     while 1:
         logger.debug(f"page: {page}")
-        response = requests.get("https://www.pixiv.net/ajax/user/{}/illusts/bookmarks?tag=&offset={}&limit={}&rest=show"
-                                .format(user, str((page - 1) * one_page_count), str(one_page_count)), headers=header)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://www.pixiv.net/ajax/user/{}/illusts/bookmarks?tag=&offset={}&limit={}&rest=show"
+                .format(user, str((page - 1) * one_page_count), str(one_page_count)), headers=header)
         if response.status_code != 200:
             raise Exception(f"Get bookmarks: Error status code: {response.status_code}")
         json_data = json.loads(response.content.decode("utf-8"))
@@ -53,4 +55,3 @@ def get_bookmarks(cookie: str, user: str):
 
     bookmarks["total"] = total
     return bookmarks
-

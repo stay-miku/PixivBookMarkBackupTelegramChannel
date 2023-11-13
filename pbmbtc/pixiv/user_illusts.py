@@ -1,4 +1,5 @@
-import requests
+# import requests
+import httpx
 import json
 import logging
 
@@ -6,7 +7,7 @@ logger = logging.getLogger("user_illust")
 logger.setLevel(logging.DEBUG)
 
 
-def get_user_illusts(pid: str, cookie: str):
+async def get_user_illusts(pid: str, cookie: str):
     logger.debug(f"pid: {pid}")
 
     header = {
@@ -20,7 +21,8 @@ def get_user_illusts(pid: str, cookie: str):
 
     url = "https://www.pixiv.net/ajax/user/{}/profile/all?lang=zh".format(pid)
 
-    response = requests.get(url, headers=header)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=header)
     if response.status_code != 200:
         raise Exception(f"Get user illusts: Error status code: {response.status_code}")
     response_json = json.loads(response.content.decode("utf-8"))

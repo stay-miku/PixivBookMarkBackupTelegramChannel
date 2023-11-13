@@ -1,4 +1,5 @@
-import requests
+# import requests
+import httpx
 import json
 import copy
 import logging
@@ -25,14 +26,15 @@ referer = "https://www.pixiv.net/artworks/{}"
 
 
 # 获取动图数据
-def get_ugoira_meta(pid: str, cookie: str):
+async def get_ugoira_meta(pid: str, cookie: str):
     logger.debug(f"ugoira meta: pid: {pid}")
 
     h = copy.deepcopy(header)
     h["cookie"] = cookie
     h["referer"] = referer.format(pid)
 
-    response = requests.get("https://www.pixiv.net/ajax/illust/{}/ugoira_meta".format(pid), headers=h)
+    async with httpx.AsyncClient() as client:
+        response = await client.get("https://www.pixiv.net/ajax/illust/{}/ugoira_meta".format(pid), headers=h)
     if response.status_code != 200:
         raise Exception(f"Get ugoira meta: Error status code: {response.status_code}")
     json_data = json.loads(response.content.decode("utf-8"))
@@ -43,14 +45,15 @@ def get_ugoira_meta(pid: str, cookie: str):
 
 
 # 获取作品数据
-def get_illust_meta(pid: str, cookie: str):
+async def get_illust_meta(pid: str, cookie: str):
     logger.debug(f"illust meta: pid: {pid}")
 
     h = copy.deepcopy(header)
     h["cookie"] = cookie
     h["referer"] = referer.format(pid)
 
-    response = requests.get("https://www.pixiv.net/ajax/illust/" + pid, headers=h)
+    async with httpx.AsyncClient() as client:
+        response = await client.get("https://www.pixiv.net/ajax/illust/" + pid, headers=h)
     if response.status_code != 200:
         raise Exception(f"Get illust meta: Error status code: {response.status_code}")
     json_data = json.loads(response.content.decode("utf-8"))
@@ -60,13 +63,15 @@ def get_illust_meta(pid: str, cookie: str):
     return json_data["body"]
 
 
-def get_pages(pid: str, cookie: str):
+async def get_pages(pid: str, cookie: str):
     logger.debug(f"pages meta(for illust): pid: {pid}")
 
     h = copy.deepcopy(header)
     h["referer"] = referer.format(pid)
     h["cookie"] = cookie
-    response = requests.get("https://www.pixiv.net/ajax/illust/{}/pages".format(pid), headers=h)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get("https://www.pixiv.net/ajax/illust/{}/pages".format(pid), headers=h)
     if response.status_code != 200:
         raise Exception(f"Get page: Error status code: {response.status_code}")
     pages_json = json.loads(response.content.decode("utf-8"))

@@ -5,6 +5,7 @@ import logging
 import time
 import traceback
 from typing import Callable, Dict, List
+import asyncio
 
 logger = logging.getLogger("utils")
 
@@ -89,17 +90,17 @@ def compress_image_if_needed(image_bytes, max_size=1024*1024*10):
     return image_bytes
 
 
-def retry(func: Callable, retry_max_attempts: int, retry_delay: int, **kwargs):
+async def retry(func: Callable, retry_max_attempts: int, retry_delay: int, **kwargs):
     attempt = 1
     while attempt <= retry_max_attempts:
         try:
-            result = func(**kwargs)
+            result = await func(**kwargs)
             return result
         except Exception as e:
             traceback.print_exception(e)
             logger.warning(f"An exception occurred while running {func.__name__}: {e}, retry after {retry_delay}, retry: {attempt}, max_attempts: {retry_max_attempts}")
             attempt += 1
-            time.sleep(retry_delay)
+            await asyncio.sleep(retry_delay)
 
     raise Exception(
         f"Attempting to run {func.__name__} exceeded the maximum number of retries: {retry_max_attempts}")

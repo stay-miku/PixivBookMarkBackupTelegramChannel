@@ -15,7 +15,7 @@ logger = logging.getLogger("update bookmarks record")
 
 
 # 更新单个作品, illust为简略meta(bookmarks api传递的作品meta数据) update_meta为是否强制更新meta
-def update_single(illust, update_meta, session: sqlalchemy.orm.Session):
+async def update_single(illust, update_meta, session: sqlalchemy.orm.Session):
     illust_id = str(illust['id'])
     user_id = int(illust['userId'])
     exists = session.query(db.Illust).filter_by(id=illust_id).first()
@@ -24,13 +24,15 @@ def update_single(illust, update_meta, session: sqlalchemy.orm.Session):
     if exists:
         # 失效作品
         if user_id == 0:
+            logger.debug(f"unavailable illust: {illust_id}")
             exists.unavailable = 1
             exists.queried = 1
             # session.commit()
         else:
             # 更新meta 或 作品从失效到有效(这种情况只有作者把私有设为公开才行了)
             if update_meta or exists.unavailable == 1:
-                meta = retry(pixiv.get_illust_meta, 5, 0, pid=illust_id, cookie=config.cookie)
+                logger.debug(f"update meta: {illust_id}")
+                meta = await retry(pixiv.get_illust_meta, 5, 0, pid=illust_id, cookie=config.cookie)
                 exists.title = meta['illustTitle']
                 exists.type = meta['illustType']
                 exists.comment = meta['illustComment']
@@ -47,6 +49,7 @@ def update_single(illust, update_meta, session: sqlalchemy.orm.Session):
                 # session.commit()
             # 不更新meta
             else:
+                logger.debug(f"don't update: {illust_id}")
                 exists.queried = 1
                 # session.commit()
 
@@ -54,6 +57,7 @@ def update_single(illust, update_meta, session: sqlalchemy.orm.Session):
     else:
         # 失效作品
         if user_id == 0:
+            logger.debug(f"unavailable and not saved: {illust_id}")
             i = db.Illust()
             i.id = illust_id
             i.title = ""
@@ -74,7 +78,8 @@ def update_single(illust, update_meta, session: sqlalchemy.orm.Session):
             session.add(i)
             # session.commit()
         else:
-            meta = retry(pixiv.get_illust_meta, 5, 0, cookie=config.cookie, pid=illust_id)
+            logger.debug(f"need backup: {illust_id}")
+            meta = await retry(pixiv.get_illust_meta, 5, 0, cookie=config.cookie, pid=illust_id)
             i = db.Illust()
             i.id = illust_id
             i.title = meta['illustTitle']
@@ -96,18 +101,18 @@ def update_single(illust, update_meta, session: sqlalchemy.orm.Session):
             # session.commit()
 
 
-def update(update_meta: bool, delay: int):
+async def update(update_meta: bool, delay: int):
     start_time = time.time()
     logger.info(f"start update, update_meta: {update_meta}, delay: {delay}")
-    user = retry(pixiv.cookie_verify, 5, 0, cookie=config.cookie)
+    user = await retry(pixiv.cookie_verify, 5, 0, cookie=config.cookie)
 
-    bookmarks = retry(pixiv.get_bookmarks, 5, 0, cookie=config.cookie, user=user["userId"])
+    bookmarks = await retry(pixiv.get_bookmarks, 5, 0, cookie=config.cookie, user=user["userId"])
     logger.info(f"update, total illusts: {bookmarks['total']}")
     with db.start_session() as session:
         total = bookmarks['total']
         i = 1
         for illust in bookmarks["illust"]:
-            update_single(illust, update_meta, session)
+            await update_single(illust, update_meta, session)
             i += 1
             logger.info(f"{i}/{total}, process: {i/total}")
             time.sleep(delay)
@@ -126,7 +131,7 @@ def update(update_meta: bool, delay: int):
 
 async def update_task(context: ContextTypes.DEFAULT_TYPE):
     try:
-        update(False, 1)
+        await update(False, 1)
     except Exception as e:
         traceback.print_exception(e)
         logger.error(f"Update error: {e}")

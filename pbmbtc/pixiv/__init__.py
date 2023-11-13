@@ -7,23 +7,23 @@ from .utils import compress_frame_2, get_tags, get_image_format, delete_files_in
 from typing import List, Dict
 import os
 from io import BytesIO
-import subprocess
 from zipfile import ZipFile
 import logging
 import math
-
+import asyncio
 
 # 其实对于get请求和ffmpeg生成gif应该定义为协程的,但是...能跑就行,有机会再改改
 # 没有协程的问题只在于在更新和备份时bot会无响应)
+# 并不打算使用协程提高api请求速率,并发太高怕被ban
 
 logger = logging.getLogger("pixiv")
 
 
 # 获取ugoira的zip打包文件 文件名 控制参数
-def get_ugoira(pid, u_cookie) -> Dict:
+async def get_ugoira(pid, u_cookie) -> Dict:
     logger.debug(f"ugoira: pid: {pid}")
-    ugoira_meta = get_ugoira_meta(pid, u_cookie)
-    ugoira = ugoira_download(ugoira_meta["originalSrc"])
+    ugoira_meta = await get_ugoira_meta(pid, u_cookie)
+    ugoira = await ugoira_download(ugoira_meta["originalSrc"])
     file_name = ugoira_meta["originalSrc"].rsplit("/", 1)[1]
 
     return {"file": ugoira, "file_name": file_name, "meta": ugoira_meta}
@@ -31,7 +31,7 @@ def get_ugoira(pid, u_cookie) -> Dict:
 
 # tmp_path内不要存放任何有价值文件
 # tmp_path不要用/结尾
-def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024*1024*50) -> bytes:
+async def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024 * 1024 * 50) -> bytes:
     logger.debug(f"ugoira gif")
     # imageio方案放弃,生成gif动图大小比ffmpeg大且帧率无法完全控制
     # zip_buffer = BytesIO(file)
@@ -75,11 +75,13 @@ def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024*1024*50) -> bytes:
     logger.debug(f"ugoira gif: fps: {gif_fps}, extension: {gif_frame_extension}, name_length: {gif_frame_name_length}")
 
     # ffmpeg生成gif
-    result = subprocess.run(f"ffmpeg -framerate {gif_fps} -i {tmp_path}/%0{gif_frame_name_length}d.{gif_frame_extension} -vf \"split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" {os.path.join(tmp_path, gif_file_name)}"
-                            , stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-
-    if result.returncode != 0:
-        raise Exception(f"stdout: {result.stdout.decode('utf-8')}\n--------------------------\nstderr: {result.stderr.decode('utf-8')}")
+    process = await asyncio.create_subprocess_shell(
+        f"ffmpeg -framerate {gif_fps} -i {tmp_path}/%0{gif_frame_name_length}d.{gif_frame_extension} -vf \"split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" {os.path.join(tmp_path, gif_file_name)}"
+        , stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, shell=True)
+    stdout, stderr = await process.communicate()
+    if process.returncode != 0:
+        raise Exception(
+            f"stdout: {stdout.decode('utf-8')}\n--------------------------\nstderr: {stderr.decode('utf-8')}")
 
     with open(os.path.join(tmp_path, gif_file_name), "rb") as f:
         gif = f.read()
@@ -87,7 +89,7 @@ def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024*1024*50) -> bytes:
     # 压缩
     if len(gif) >= max_size:
         logger.debug(f"ugoira gif: gif size > max_size, gif size: {len(gif)}, max_size: {max_size}")
-        rate = math.sqrt(max_size / len(gif)) * 0.95            # 计算压缩图像的比例
+        rate = math.sqrt(max_size / len(gif)) * 0.95  # 计算压缩图像的比例
         del gif
         compress_frame_2(frames_name, tmp_path, rate)
         os.remove(os.path.join(tmp_path, gif_file_name))
@@ -95,13 +97,13 @@ def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024*1024*50) -> bytes:
         logger.debug("ugoira gif: regenerate gif...")
 
         # 重新生成
-        result = subprocess.run(
+        process = await asyncio.create_subprocess_shell(
             f"ffmpeg -framerate {gif_fps} -i {tmp_path}/%0{gif_frame_name_length}d.{gif_frame_extension} -vf \"split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" {os.path.join(tmp_path, gif_file_name)}"
-            , stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-
-        if result.returncode != 0:
+            , stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, shell=True)
+        stdout, stderr = await process.communicate()
+        if process.returncode != 0:
             raise Exception(
-                f"stdout: {result.stdout.decode('utf-8')}\n--------------------------\nstderr: {result.stderr.decode('utf-8')}")
+                f"stdout: {stdout.decode('utf-8')}\n--------------------------\nstderr: {stderr.decode('utf-8')}")
 
         with open(os.path.join(tmp_path, gif_file_name), "rb") as f:
             gif = f.read()
@@ -110,10 +112,10 @@ def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024*1024*50) -> bytes:
     return gif
 
 
-def get_illust(pid, u_cookie) -> List[Dict]:
+async def get_illust(pid, u_cookie) -> List[Dict]:
     logger.debug(f"illust: pid: {pid}")
 
-    pages = get_pages(pid, u_cookie)
+    pages = await get_pages(pid, u_cookie)
 
     logger.debug(f"illust: pages: {len(pages)}")
 
@@ -121,18 +123,17 @@ def get_illust(pid, u_cookie) -> List[Dict]:
     illust = []
     for page in pages:
         url = page["urls"]["original"]
-        file = image_download(url)
+        file = await image_download(url)
         file_name = url.rsplit("/", 1)[1]
         illust.append({"file_name": file_name, "file": file})
 
     return illust
 
 
-def get_manga(pid, u_cookie) -> List[Dict]:
+async def get_manga(pid, u_cookie) -> List[Dict]:
     logger.debug("manga: get manga")
-    return get_illust(pid, u_cookie)
+    return await get_illust(pid, u_cookie)
 
 
 def get_novel() -> List[bytes]:
     pass
-
