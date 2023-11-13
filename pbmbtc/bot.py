@@ -53,6 +53,7 @@ async def stop_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def block_thread():
     while not do_stop_bot:
         time.sleep(1)
+        logger.info("live")
 
 
 async def run_bot(application: Application):
