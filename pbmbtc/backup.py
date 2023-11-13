@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes
 from telegram import InputMediaPhoto, InputMediaDocument, Message
 from .utils import retry, compress_image_if_needed
 from . import pixiv
-from typing import Dict, List
+from typing import Dict, List, Union
 import traceback
 
 
@@ -27,7 +27,7 @@ def get_introduce(illust: db.Illust):
     return introduce
 
 
-async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, send_preview: List | bytes, send_file: List, introduce, is_ugoira, have_sent: List[Message], spoiler=False):
+async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, send_preview: Union[List, bytes], send_file: List, introduce, is_ugoira, have_sent: List[Message], spoiler=False):
 
     channels = config.get_channel_id()
 
