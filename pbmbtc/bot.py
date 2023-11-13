@@ -29,9 +29,10 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 logger = logging.getLogger("bot")
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("telegram").setLevel(logging.WARNING)
-logging.getLogger("apscheduler").setLevel(logging.INFO)
+# logging.getLogger("httpcore").setLevel(logging.WARNING)
+# logging.getLogger("telegram").setLevel(logging.WARNING)
+# logging.getLogger("apscheduler").setLevel(logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 do_stop_bot = False
