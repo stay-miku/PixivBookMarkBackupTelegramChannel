@@ -101,7 +101,7 @@ async def update_single(illust, update_meta, session: sqlalchemy.orm.Session):
             # session.commit()
 
 
-async def update(update_meta: bool, delay: int):
+async def update(update_meta: bool, delay: int, context: ContextTypes.DEFAULT_TYPE):
     start_time = time.time()
     logger.info(f"start update, update_meta: {update_meta}, delay: {delay}")
     user = await retry(pixiv.cookie_verify, 5, 0, cookie=config.cookie)
@@ -120,7 +120,7 @@ async def update(update_meta: bool, delay: int):
         # 删除所有未被更新的作品
         unlike = session.query(db.Illust).filter_by(queried=0).all()
         for un in unlike:
-            backup.delete_backup(un.id, session)
+            await backup.delete_backup(un.id, session, context)
         # session.commit()  with内最好别手动commit
 
         session.query(db.Illust).update({"queried": 0})
@@ -131,7 +131,7 @@ async def update(update_meta: bool, delay: int):
 
 async def update_task(context: ContextTypes.DEFAULT_TYPE):
     try:
-        await update(False, 1)
+        await update(False, 1, context)
     except Exception as e:
         traceback.print_exception(e)
         logger.error(f"Update error: {e}")

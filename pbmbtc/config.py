@@ -30,3 +30,10 @@ def load_config():
         backup_number_ontime = bot.backup_number_ontime
 
     logger.debug(f"api_key: {api_key}, admin: {admin}")
+
+
+def get_channel_id():
+    with db.start_session() as session:
+        channels = session.query(db.Channel).all()
+
+        return [i.id for i in channels]

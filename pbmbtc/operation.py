@@ -65,3 +65,13 @@ def update():
 
     print("Update completed.")
 
+
+def add_channel(channel: str):
+    with db.start_session() as session:
+
+        c = db.Channel()
+        c.id = channel
+        session.add(c)
+
+    print("added")
+

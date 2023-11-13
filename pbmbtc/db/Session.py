@@ -68,21 +68,23 @@ class Channel(Base):
 class PreviewBackup(Base):
     __tablename__ = "illust_backup_previews"
 
-    message = Column(String, primary_key=True)                              # chat_id-message_id-page
+    record_id = Column(Integer, primary_key=True, autoincrement=True)
     id = Column(String, ForeignKey(f"{Illust.__tablename__}.id"), index=True)           # 作品id
     channel = Column(String, ForeignKey(f"{Channel.__tablename__}.id"))     # channel id 也是chat id
     message_id = Column(String, index=True)                                 # 对应消息id
     page = Column(Integer)                                                  # 对于张数超过10张的作品会分页发送
+    index = Column(Integer)                                                 # 分页的第几张
 
 
 class Backup(Base):
     __tablename__ = "illust_backups"
 
-    message = Column(String, primary_key=True)                              # chat_id-message_id-page
+    record_id = Column(Integer, primary_key=True, autoincrement=True)
     id = Column(String, ForeignKey(f"{Illust.__tablename__}.id"), index=True)           # 作品id
     channel = Column(String, ForeignKey(f"{Channel.__tablename__}.id"))     # channel id
     message_id = Column(String, index=True)                                 # 对应消息id
     page = Column(Integer)                                                  # 对于张数超过10张的作品会分页发送
+    index = Column(Integer)                                                 # 分页的第几张
 
 
 engine = create_engine(f"sqlite:///{database_path}data.db", echo=debug)

@@ -26,6 +26,9 @@ if __name__ == "__main__":
     elif args[0] == "update":
         operation.update()
 
+    elif args[0] == "add":
+        operation.add_channel(args[1])
+
     elif args[0] == "run":
         config.load_config()
         bot.run()

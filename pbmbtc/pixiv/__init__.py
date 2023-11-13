@@ -112,6 +112,7 @@ async def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024 * 1024 * 50)
     return gif
 
 
+# 不仅可以用于插画和漫画 也可以用于动图,可以作为动图预览
 async def get_illust(pid, u_cookie) -> List[Dict]:
     logger.debug(f"illust: pid: {pid}")
 
