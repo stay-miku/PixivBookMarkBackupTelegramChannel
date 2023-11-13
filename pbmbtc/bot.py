@@ -32,7 +32,7 @@ logger = logging.getLogger("bot")
 # logging.getLogger("httpcore").setLevel(logging.WARNING)
 # logging.getLogger("telegram").setLevel(logging.WARNING)
 # logging.getLogger("apscheduler").setLevel(logging.INFO)
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
