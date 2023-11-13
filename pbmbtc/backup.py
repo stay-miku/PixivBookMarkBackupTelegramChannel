@@ -179,7 +179,7 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
         [m.delete() for m in have_sent]         # 回滚机制, session也会rollback
 
 
-async def delete_backup(illust: str | db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE):
+async def delete_backup(illust: Union[str, db.Illust], session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE):
     if isinstance(illust, str):
         illust = session.query(db.Illust).filter_by(id=illust).one()
 
