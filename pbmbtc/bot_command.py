@@ -47,6 +47,24 @@ async def reload_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
 
 
+async def stop_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_user.id == int(config.admin):
+        await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
+                                      chat_id=update.effective_chat.id, text="你不是管理员")
+        logger.info(f"some one use admin command reload_config: {update.effective_user.id}")
+        return
+
+    task = context.job_queue.get_jobs_by_name("bookmarks_task")
+    for job in task:
+        job.schedule_removal()
+    task = context.job_queue.get_jobs_by_name("backup_task")
+    for job in task:
+        job.schedule_removal()
+    logger.info("delete task")
+
+    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
+
+
 async def force_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
@@ -58,6 +76,7 @@ async def force_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("force update start")
     await update_bookmarks_record.update_task(context)
     logger.info("force update completed")
+    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
 
 
 async def force_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -71,3 +90,4 @@ async def force_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("force backup start")
     await update_illust.update_backup(context)
     logger.info("force backup completed")
+    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")

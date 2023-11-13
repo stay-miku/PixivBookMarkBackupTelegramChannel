@@ -59,6 +59,7 @@ async def run_bot(application: Application):
     application.add_handler(CommandHandler("stop_bot", stop_bot))
     application.add_handler(CommandHandler("reload_config", bot_command.reload_config))
     application.add_handler(CommandHandler("reload_task", bot_command.reload_task))
+    application.add_handler(CommandHandler("stop_task", bot_command.stop_task))
     application.add_handler(CommandHandler("force_update", bot_command.force_update))
     application.add_handler(CommandHandler("force_backup", bot_command.force_backup))
     application.add_handler(CommandHandler("start", bot_command.start))
@@ -80,6 +81,7 @@ async def run_bot(application: Application):
         BotCommand("start", "开始与帮助"),
         BotCommand("reload_config", "管理员命令,重新载入配置"),
         BotCommand("reload_task", "管理员命令,重新运行定时任务"),
+        BotCommand("stop_task", "停止后台任务"),
         BotCommand("force_update", "管理员命令,强制更新收藏列表"),
         BotCommand("force_backup", "管理员命令,强制启动一次备份操作"),
         BotCommand("stop_bot", "管理员命令,停止bot")
