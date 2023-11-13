@@ -41,6 +41,7 @@ do_stop_bot = False
 
 
 async def stop_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info("stop attempt")
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(chat_id=update.effective_chat.id, text="你不是管理员")
         logger.info(f"some one use admin command stop_bot: {update.effective_user.id}")
