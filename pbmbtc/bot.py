@@ -1,6 +1,7 @@
 import asyncio
+import contextvars
+import functools
 import logging
-import traceback
 import time
 from . import config
 from . import update_illust
@@ -56,6 +57,13 @@ def block_thread():
         time.sleep(1)
 
 
+async def to_thread(func, /, *args, **kwargs):
+    loop = asyncio.get_running_loop()
+    ctx = contextvars.copy_context()
+    func_call = functools.partial(ctx.run, func, *args, **kwargs)
+    return await loop.run_in_executor(None, func_call)
+
+
 async def run_bot(application: Application):
     application.add_handler(CommandHandler("stop_bot", stop_bot))
     application.add_handler(CommandHandler("reload_config", bot_command.reload_config))
@@ -89,7 +97,7 @@ async def run_bot(application: Application):
     ])
 
     # 阻塞
-    block = asyncio.to_thread(block_thread)
+    block = to_thread(block_thread)
     await block
 
     # 停止bot
