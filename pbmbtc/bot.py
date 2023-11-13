@@ -53,16 +53,21 @@ async def stop_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         do_stop_bot = True
 
 
-def block_thread():
+# def block_thread():
+#     while not do_stop_bot:
+#         time.sleep(1)
+#
+#
+# async def to_thread(func, /, *args, **kwargs):
+#     loop = asyncio.get_running_loop()
+#     ctx = contextvars.copy_context()
+#     func_call = functools.partial(ctx.run, func, *args, **kwargs)
+#     return await loop.run_in_executor(None, func_call)
+
+
+async def block():
     while not do_stop_bot:
-        time.sleep(1)
-
-
-async def to_thread(func, /, *args, **kwargs):
-    loop = asyncio.get_running_loop()
-    ctx = contextvars.copy_context()
-    func_call = functools.partial(ctx.run, func, *args, **kwargs)
-    return await loop.run_in_executor(None, func_call)
+        await asyncio.sleep(1)
 
 
 async def run_bot(application: Application):
@@ -73,6 +78,7 @@ async def run_bot(application: Application):
     application.add_handler(CommandHandler("force_update", bot_command.force_update))
     application.add_handler(CommandHandler("force_backup", bot_command.force_backup))
     application.add_handler(CommandHandler("start", bot_command.start))
+
 
     # 开始运行bot
     await application.initialize()
@@ -98,8 +104,10 @@ async def run_bot(application: Application):
     ])
 
     # 阻塞
-    block = to_thread(block_thread)
-    await block
+    # block = to_thread(block_thread)
+    # await block
+
+    await block()
 
     # 停止bot
     await application.updater.stop()
