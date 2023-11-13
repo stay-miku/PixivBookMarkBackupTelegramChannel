@@ -12,6 +12,10 @@ from zipfile import ZipFile
 import logging
 import math
 
+
+# 其实对于get请求和ffmpeg生成gif应该定义为协程的,但是...能跑就行,有机会再改改
+# 没有协程的问题只在于在更新和备份时bot会无响应)
+
 logger = logging.getLogger("pixiv")
 
 
@@ -80,6 +84,7 @@ def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024*1024*50) -> bytes:
     with open(os.path.join(tmp_path, gif_file_name), "rb") as f:
         gif = f.read()
 
+    # 压缩
     if len(gif) >= max_size:
         logger.debug(f"ugoira gif: gif size > max_size, gif size: {len(gif)}, max_size: {max_size}")
         rate = math.sqrt(max_size / len(gif)) * 0.95            # 计算压缩图像的比例
@@ -129,9 +134,5 @@ def get_manga(pid, u_cookie) -> List[Dict]:
 
 
 def get_novel() -> List[bytes]:
-    pass
-
-
-def get_work() -> List[bytes]:
     pass
 

@@ -12,10 +12,42 @@ def init():
         api_key = input("Bot api key:")
         admin = input("The telegram id of the bot administrator:")
         cookie = input("The pixiv account cookie:")
+        gif_preview = 0 if input("Use gif as ugoira type preview(Y/n):").lower() == "n" else 1
+        tmp_path = input("Cache directory path, don't end with '/' (default:'./tmp'):")
+        if tmp_path == "":
+            tmp_path = "./tmp"
+
+        bookmarks_update_interval = input("Bookmarks table update interval(sec)(default: 43200):")
+        if bookmarks_update_interval == "":
+            bookmarks_update_interval = 43200
+        else:
+            bookmarks_update_interval = int(bookmarks_update_interval)
+
+        backup_interval = input("Backup operation interval(sec)(default: 300):")
+        if backup_interval == "":
+            backup_interval = 300
+        else:
+            backup_interval = int(backup_interval)
+
+        backup_number_ontime = input("Number of works backed up each time(default: 3):")
+        if backup_number_ontime == "":
+            backup_number_ontime = 3
+        else:
+            backup_number_ontime = int(backup_number_ontime)
+
         # config
 
-        bot = db.Bot(key=api_key, admin=admin, cookie=cookie)
+        bot = db.Bot()
+        bot.key = api_key
+        bot.admin = admin
+        bot.cookie = cookie
+        bot.gif_preview = gif_preview
+        bot.bookmarks_update_interval = bookmarks_update_interval
+        bot.backup_interval = backup_interval
+        bot.tmp_path = tmp_path
+        bot.backup_number_ontime = backup_number_ontime
         session.add(bot)
+
     print("Bot setup completed.")
 
 
@@ -25,12 +57,9 @@ def update():
             print("Bot has not been set up yet.")
             return
 
-        t = input("The item that need to be update(key/admin/cookie):")
-        if t != "key" and t != "admin" and t != "cookie":
-            print(f"Error item: {t}")
-            return
+        t = input("The config that need to be update(key/admin/cookie/gif_preview/tmp_path/bookmarks_update_interval/backup_interval/backup_number_ontime):")
 
-        v = input("New item value:")
+        v = input("New config value:")
 
         session.query(db.Bot).update({t: v})
 

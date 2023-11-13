@@ -10,7 +10,7 @@ logger.setLevel(logging.DEBUG)
 one_page_count = 48
 
 
-# 获取收藏列表返回字典,会抛出GetBookmarksError
+# 获取收藏列表返回字典
 # 鉴于收藏与更新的不同,只能每次获取所有收藏然后遍历(反正收藏更新频率要求没那么高www)
 def get_bookmarks(cookie: str, user: str):
     header = {

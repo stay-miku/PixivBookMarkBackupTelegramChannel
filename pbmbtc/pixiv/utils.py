@@ -36,13 +36,13 @@ def delete_files_in_folder(folder_path):
 
 def get_tags(meta):
     tag_list = meta["tags"]["tags"]
-    tags = []
+    tags = {}
     for tag in tag_list:
         if "translation" in tag:
             translation = []
             for t in list(tag["translation"].keys()):
                 translation.append(tag["translation"][t])
-            tags.append({tag["tag"]: translation})
+            tags[tag['tag']] = translation
     return tags
 
 

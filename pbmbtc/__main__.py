@@ -1,5 +1,10 @@
 import sys
 from . import operation
+from . import config
+from . import bot
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 help_str = """Pixiv bookmark backup on telegram channel
@@ -22,7 +27,8 @@ if __name__ == "__main__":
         operation.update()
 
     elif args[0] == "run":
-        pass
+        config.load_config()
+        bot.run()
 
     else:
         print(help_str)

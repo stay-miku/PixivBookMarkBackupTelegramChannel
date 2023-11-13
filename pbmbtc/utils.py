@@ -2,9 +2,11 @@ from PIL import Image
 import io
 import math
 import logging
+import time
+import traceback
+from typing import Callable, Dict, List
 
 logger = logging.getLogger("utils")
-logger.setLevel(logging.DEBUG)
 
 
 # 和pixiv/utils里的一模一样
@@ -85,3 +87,28 @@ def compress_image_if_needed(image_bytes, max_size=1024*1024*10):
         image_bytes, result = compress_image(image_bytes, max_size)
 
     return image_bytes
+
+
+def retry(func: Callable, retry_max_attempts: int, retry_delay: int, **kwargs):
+    attempt = 1
+    while attempt <= retry_max_attempts:
+        try:
+            result = func(**kwargs)
+            return result
+        except Exception as e:
+            traceback.print_exception(e)
+            logger.warning(f"An exception occurred while running {func.__name__}: {e}, retry after {retry_delay}, retry: {attempt}, max_attempts: {retry_max_attempts}")
+            attempt += 1
+            time.sleep(retry_delay)
+
+    raise Exception(
+        f"Attempting to run {func.__name__} exceeded the maximum number of retries: {retry_max_attempts}")
+
+
+def format_tags(tags: Dict[str, List]):
+    t = []
+    for key in list(tags.keys()):
+        t.append(key + '=>' + '=>'.join(tags[key]))
+
+    return '\n'.join(t)
+
