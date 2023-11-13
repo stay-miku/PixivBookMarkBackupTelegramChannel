@@ -28,7 +28,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 
 logger = logging.getLogger("bot")
 
-logging.getLogger("httpx").setLevel(logging.WARNING)
+# logging.getLogger("httpx").setLevel(logging.WARNING)
 # logging.getLogger("httpcore").setLevel(logging.WARNING)
 # logging.getLogger("telegram").setLevel(logging.WARNING)
 # logging.getLogger("apscheduler").setLevel(logging.INFO)
@@ -53,7 +53,6 @@ async def stop_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def block_thread():
     while not do_stop_bot:
         time.sleep(1)
-        logger.info("live")
 
 
 async def run_bot(application: Application):
