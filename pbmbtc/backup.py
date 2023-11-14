@@ -183,7 +183,7 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
             logger.debug(f"delete message: {m}")
         logger.error(f"error: {e}")
         traceback.print_exception(type(e), e, e.__traceback__)
-        await retry(context.bot.sendMessage, chat_id=config.admin, text=f"发生错误: {e}, illust: {error_illust_id}")
+        await retry(context.bot.sendMessage, 5, 0, chat_id=config.admin, text=f"发生错误: {e}, illust: {error_illust_id}")
 
 
 async def delete_backup(illust: Union[str, db.Illust], session: sqlalchemy.orm.Session,
