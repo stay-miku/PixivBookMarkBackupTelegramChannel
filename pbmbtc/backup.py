@@ -152,12 +152,16 @@ async def send_unavailable(illust: db.Illust, context: ContextTypes.DEFAULT_TYPE
         illust.backup = 1
 
 
-async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
+# None为不指定id
+async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT_TYPE):
     have_sent: List[Message] = []
     error_illust_id = "0"
     try:
         with db.start_session() as session:
-            illust = session.query(db.Illust).filter_by(id=illust_id).first()
+            if illust_id:
+                illust = session.query(db.Illust).filter_by(id=illust_id).first()
+            else:
+                illust = session.query(db.Illust).filter_by(backup=0).first()
             error_illust_id = illust.id
 
             if illust.unavailable == 1:
@@ -173,9 +177,9 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
                 await send_ugoira(illust, session, context, have_sent)
 
             else:
-                raise Exception(f"Unknown illust type: {illust.type}, id: {error_illust_id}")
+                raise Exception(f"Unknown illust type: {illust.type}, id: {illust.id}")
 
-            raise Exception("test")
+            logger.info(f"backup completed, illust: {illust.id}")
 
     except Exception as e:
         for m in have_sent:
