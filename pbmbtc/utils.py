@@ -1,3 +1,4 @@
+import telegram
 from PIL import Image
 import io
 import math
@@ -96,8 +97,13 @@ async def retry(func: Callable, retry_max_attempts: int, retry_delay: int, **kwa
         try:
             result = await func(**kwargs)
             return result
+        # 对发送信息过快的适配
+        except telegram.error.RetryAfter as e:
+            logger.warning(f"telegram.error.RetryAfter, retry after: {e.retry_after}")
+            attempt += 1
+            await asyncio.sleep(e.retry_after + 1)
         except Exception as e:
-            traceback.print_exception(e)
+            traceback.print_exception(type(e), e, e.__traceback__)
             logger.warning(f"An exception occurred while running {func.__name__}: {e}, retry after {retry_delay}, retry: {attempt}, max_attempts: {retry_max_attempts}")
             attempt += 1
             await asyncio.sleep(retry_delay)

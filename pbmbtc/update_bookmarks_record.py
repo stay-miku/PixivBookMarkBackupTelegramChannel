@@ -138,7 +138,7 @@ async def updateTask(context: ContextTypes.DEFAULT_TYPE):
     try:
         await update(False, 1, context)
     except Exception as e:
-        traceback.print_exception(e)
+        traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"Update error: {e}")
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
 
