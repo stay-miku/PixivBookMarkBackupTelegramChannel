@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 
 from . import pixiv
@@ -103,6 +104,7 @@ async def update_single(illust, update_meta):
                 # session.commit()
 
 
+# update_meta用于指定是否强制更新已有记录的meta(默认task是False,可以手动运行,会很慢)
 async def update(update_meta: bool, delay: int, context: ContextTypes.DEFAULT_TYPE):
     start_time = time.time()
     logger.info(f"start update, update_meta: {update_meta}, delay: {delay}")
@@ -132,10 +134,19 @@ async def update(update_meta: bool, delay: int, context: ContextTypes.DEFAULT_TY
     logger.info(f"completed update, exc time: {end_time - start_time} sec")
 
 
-async def update_task(context: ContextTypes.DEFAULT_TYPE):
+async def updateTask(context: ContextTypes.DEFAULT_TYPE):
     try:
         await update(False, 1, context)
     except Exception as e:
         traceback.print_exception(e)
         logger.error(f"Update error: {e}")
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
+
+    logger.info("update task completed")
+
+
+async def update_task(context: ContextTypes.DEFAULT_TYPE):
+
+    logger.info("start update record")
+    asyncio.create_task(updateTask(context))
+

@@ -75,8 +75,8 @@ async def force_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功,等待更新")
     logger.info("force update start")
     await update_bookmarks_record.update_task(context)
-    logger.info("force update completed")
-    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
+    # logger.info("force update completed")
+    # await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
 
 
 async def force_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -89,5 +89,5 @@ async def force_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功,等待备份")
     logger.info("force backup start")
     await update_illust.update_backup(context)
-    logger.info("force backup completed")
-    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
+    # logger.info("force backup completed")
+    # await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
