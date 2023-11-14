@@ -15,7 +15,7 @@ def get_image_format(byte_data):
     if byte_data.startswith(b'\x89PNG'):
         return 'png'
     elif byte_data.startswith(b'\xff\xd8'):
-        return 'jpg'
+        return 'jpeg'
     elif byte_data.startswith(b'\x47\x49'):
         return 'gif'
     elif byte_data.startswith(b'\x42\x4D'):
