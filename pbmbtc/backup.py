@@ -173,9 +173,11 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
             raise Exception("test")
 
     except Exception as e:
-        [context.bot.deleteMessage(chat_id=m['channel'], message_id=m['message_id']) for m in have_sent]  # 回滚机制, session也会rollback
+        for m in have_sent:
+            context.bot.deleteMessage(chat_id=m['channel'], message_id=m['message_id'])
+            logger.debug(f"delete message: {m}")
         logger.error(f"error: {e}")
-        traceback.print_exception(e)
+        traceback.print_exception(type(e), e, e.__traceback__)
         await context.bot.sendMessage(chat_id=config.admin, text=f"发生错误: {e}, illust: {illust.id}")
 
 
