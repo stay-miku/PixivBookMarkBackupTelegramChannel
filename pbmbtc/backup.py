@@ -175,10 +175,10 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
                 raise Exception(f"Unknown illust type: {illust.type}, id: {error_illust_id}")
 
     except Exception as e:
+        [m.delete() for m in have_sent]  # 回滚机制, session也会rollback
         logger.error(f"error: {e}")
         traceback.print_exception(e)
         await context.bot.sendMessage(chat_id=config.admin, text=f"发生错误: {e}, illust: {illust.id}")
-        [m.delete() for m in have_sent]         # 回滚机制, session也会rollback
 
 
 async def delete_backup(illust: Union[str, db.Illust], session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE):
