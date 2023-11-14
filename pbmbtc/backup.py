@@ -170,6 +170,8 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
             else:
                 raise Exception(f"Unknown illust type: {illust.type}, id: {error_illust_id}")
 
+            raise Exception("test")
+
     except Exception as e:
         [context.bot.deleteMessage(chat_id=m['channel'], message_id=m['message_id']) for m in have_sent]  # 回滚机制, session也会rollback
         logger.error(f"error: {e}")
