@@ -27,7 +27,7 @@ def get_introduce(illust: db.Illust):
     return introduce
 
 
-async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, send_preview: Union[List, bytes], send_file: List, introduce, is_ugoira, have_sent: List[Message], spoiler=False):
+async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, send_preview: Union[List, bytes], send_file: List, introduce, is_ugoira, have_sent: List, spoiler=False):
 
     channels = config.get_channel_id()
 
@@ -37,22 +37,20 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
                                                                , caption=introduce
                                                                , pool_timeout=600, read_timeout=600, write_timeout=600
                                                                , connect_timeout=600)
+            have_sent += [{"message_id": i.message_id, "channel": channel} for i in preview_message]
 
         else:
             preview_message = await context.bot.sendAnimation(chat_id=channel, animation=send_preview, parse_mode='HTML'
                                                               , caption=introduce, has_spoiler=spoiler
                                                               , pool_timeout=600, read_timeout=600, write_timeout=600
                                                               , connect_timeout=600)
-            preview_message = [preview_message]
+            have_sent.append({"message_id": preview_message.message_id, "channel": channel})
 
         file_message = await context.bot.sendMediaGroup(chat_id=channel, media=send_file,
                                                         reply_to_message_id=preview_message[0].message_id
                                                         , pool_timeout=600, read_timeout=600, write_timeout=600
                                                         , connect_timeout=600)
-        preview_message = list(preview_message)
-        file_message = list(file_message)
-        sent: List[Message] = preview_message + file_message
-        have_sent += sent
+        have_sent += [{"message_id": i.message_id, "channel": channel} for i in file_message]
 
         for i in range(len(preview_message)):
             m = preview_message[i]
@@ -75,7 +73,7 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
             session.add(record)
 
 
-async def send_one_page(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, files: List[Dict], page, have_sent: List[Message]):
+async def send_one_page(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, files: List[Dict], page, have_sent: List):
 
     introduce = get_introduce(illust)
     need_spoiler = 'R-18' in illust.tags
@@ -102,11 +100,11 @@ async def send_illust(illust: db.Illust, session: sqlalchemy.orm.Session, contex
     illust.saved = 1
 
 
-async def send_manga(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, have_sent: List[Message]):
+async def send_manga(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, have_sent: List):
     await send_illust(illust, session, context, have_sent)
 
 
-async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, have_sent: List[Message]):
+async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE, have_sent: List):
 
     ugoira = await retry(pixiv.get_ugoira, 5, 0, pid=illust.id, u_cookie=config.cookie)
 
@@ -116,8 +114,6 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
 
     spoiler = 'R-18' in illust.tags
 
-    have_sent: List[Message] = []
-
     introduce = get_introduce(illust)
     send_file = [InputMediaDocument(ugoira_src, filename=ugoira_file_name), InputMediaDocument(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8'), filename=f"{ugoira_file_name.split('.', 1)[0]}_meta.txt")]
     if config.gif_preview:
@@ -125,14 +121,14 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
         await send_medias(illust.id, 0, session, context, gif, send_file, introduce, True, have_sent, spoiler)
     else:
         preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
-        send_preview = InputMediaPhoto(preview_image[0]['file'], has_spoiler=spoiler)
-        await send_medias(illust.id, 0, session, context, send_preview, introduce, False, have_sent)
+        send_preview = [InputMediaPhoto(preview_image[0]['file'], has_spoiler=spoiler)]
+        await send_medias(illust.id, 0, session, context, send_preview, send_file, introduce, False, have_sent)
 
     illust.backup = 1
     illust.saved = 1
 
 
-async def send_unavailable(illust: db.Illust, context: ContextTypes.DEFAULT_TYPE, session: sqlalchemy.orm.Session, have_sent: List[Message]):
+async def send_unavailable(illust: db.Illust, context: ContextTypes.DEFAULT_TYPE, session: sqlalchemy.orm.Session, have_sent: List):
 
     for channel in config.get_channel_id():
         sent_message = await context.bot.sendMessage(chat_id=channel, text=f"已失效作品: {illust.id}")
@@ -175,7 +171,7 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
                 raise Exception(f"Unknown illust type: {illust.type}, id: {error_illust_id}")
 
     except Exception as e:
-        [m.delete() for m in have_sent]  # 回滚机制, session也会rollback
+        [context.bot.deleteMessage(chat_id=m['channel'], message_id=m['message_id']) for m in have_sent]  # 回滚机制, session也会rollback
         logger.error(f"error: {e}")
         traceback.print_exception(e)
         await context.bot.sendMessage(chat_id=config.admin, text=f"发生错误: {e}, illust: {illust.id}")
