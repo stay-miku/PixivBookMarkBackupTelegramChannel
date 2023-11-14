@@ -174,11 +174,11 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         for m in have_sent:
-            context.bot.deleteMessage(chat_id=m['channel'], message_id=m['message_id'])
+            await context.bot.deleteMessage(chat_id=m['channel'], message_id=m['message_id'])
             logger.debug(f"delete message: {m}")
         logger.error(f"error: {e}")
         traceback.print_exception(type(e), e, e.__traceback__)
-        await context.bot.sendMessage(chat_id=config.admin, text=f"发生错误: {e}, illust: {illust.id}")
+        await context.bot.sendMessage(chat_id=config.admin, text=f"发生错误: {e}, illust: {error_illust_id}")
 
 
 async def delete_backup(illust: Union[str, db.Illust], session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE):
