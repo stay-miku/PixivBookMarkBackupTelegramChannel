@@ -79,7 +79,7 @@ async def send_one_page(illust: db.Illust, session: sqlalchemy.orm.Session, cont
 
     introduce = get_introduce(illust)
     need_spoiler = 'R-18' in illust.tags
-    preview_images = compress_image_if_needed([i['file'] for i in files])
+    preview_images = [compress_image_if_needed(i['file']) for i in files]
     send_preview = [InputMediaPhoto(i, has_spoiler=need_spoiler) for i in preview_images]
     send_file = [InputMediaDocument(i['file'], filename=i['file_name']) for i in files]
 
@@ -153,9 +153,11 @@ async def send_unavailable(illust: db.Illust, context: ContextTypes.DEFAULT_TYPE
 async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
 
     have_sent: List[Message] = []
+    error_illust_id = "0"
     try:
         with db.start_session() as session:
             illust = session.query(db.Illust).filter_by(id=illust_id).first()
+            error_illust_id = illust.id
 
             if illust.unavailable == 1:
                 await send_unavailable(illust, context, session, have_sent)
@@ -170,7 +172,7 @@ async def send_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
                 await send_ugoira(illust, session, context, have_sent)
 
             else:
-                raise Exception(f"Unknown illust type: {illust.type}, id: {illust.id}")
+                raise Exception(f"Unknown illust type: {illust.type}, id: {error_illust_id}")
 
     except Exception as e:
         logger.error(f"error: {e}")

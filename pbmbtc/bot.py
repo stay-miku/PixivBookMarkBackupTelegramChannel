@@ -70,7 +70,9 @@ async def block():
         await asyncio.sleep(1)
 
 
-async def run_bot(application: Application):
+async def run_bot():
+    application = Application.builder().token(config.api_key).build()
+
     application.add_handler(CommandHandler("stop_bot", stop_bot))
     application.add_handler(CommandHandler("reload_config", bot_command.reload_config))
     application.add_handler(CommandHandler("reload_task", bot_command.reload_task))
@@ -119,6 +121,4 @@ async def run_bot(application: Application):
 
 def run():
 
-    application = Application.builder().token(config.api_key).build()
-
-    asyncio.run(run_bot(application))
+    asyncio.run(run_bot())
