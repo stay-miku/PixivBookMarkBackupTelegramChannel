@@ -43,6 +43,8 @@ def get_tags(meta):
             for t in list(tag["translation"].keys()):
                 translation.append(tag["translation"][t])
             tags[tag['tag']] = translation
+        else:
+            tags[tag['tag']] = ''
     return tags
 
 
