@@ -75,3 +75,14 @@ def add_channel(channel: str):
 
     print("added")
 
+
+def delete_channel(channel: str):
+    with db.start_session() as session:
+        c = session.query(db.Channel).filter_by(id=channel).one()
+
+        if c:
+            session.query(db.Channel).filter_by(id=channel).delete()
+            print("delete successfully")
+
+        else:
+            print("channel does not exists")
