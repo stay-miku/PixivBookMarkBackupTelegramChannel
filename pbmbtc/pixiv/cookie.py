@@ -32,7 +32,7 @@ async def cookie_verify(cookie: str):
     content = etree.HTML(http).xpath("//meta[@name=\"global-data\"]/@content")
     user_data = json.loads(content[0])["userData"]
     if user_data is None:
-        raise Exception("cookie无效,需要更换cookie")
+        return None
     logger.debug(f"userId: {user_data['id']}, userName: {user_data['pixivId']}")
     return {"userId": user_data["id"], "userName": user_data["pixivId"]}
 
