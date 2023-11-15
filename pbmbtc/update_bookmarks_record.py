@@ -279,7 +279,7 @@ async def async_update(update_meta: bool, delay: float, context: ContextTypes.DE
 async def asyncUpdateTask(context: ContextTypes.DEFAULT_TYPE):
     try:
         # await update(False, 1, context) #?我什么时候把这delay设为1了,难怪这么慢
-        await async_update(False, 0.1, context)     # 不能设为0,第一次运行直接把号跑ban掉
+        await async_update(False, 1, context)     # 不能设为0,第一次运行直接把号跑ban掉
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"Update error: {e}")
@@ -290,7 +290,7 @@ async def asyncUpdateTask(context: ContextTypes.DEFAULT_TYPE):
 
 async def updateTask(context: ContextTypes.DEFAULT_TYPE):
     try:
-        await update(False, 0, context) #?我什么时候把这delay设为1了,难怪这么慢
+        await update(False, 1, context)     # ?我什么时候把这delay设为1了,难怪这么慢xx事实证明必须得设1,或者至少要个数,不然就被ban
         # await async_update(False, 0, context)
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
