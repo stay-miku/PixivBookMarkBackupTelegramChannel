@@ -33,6 +33,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("telegram").setLevel(logging.WARNING)
 logging.getLogger("apscheduler").setLevel(logging.INFO)
+logging.getLogger("aiosqlite").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -75,8 +76,11 @@ async def run_bot():
 
     application.add_handler(CommandHandler("stop_bot", stop_bot))
     application.add_handler(CommandHandler("reload_config", bot_command.reload_config))
-    application.add_handler(CommandHandler("reload_task", bot_command.reload_task))
-    application.add_handler(CommandHandler("stop_task", bot_command.stop_task))
+    application.add_handler(CommandHandler("stop_update_task", bot_command.stop_update_task))
+    application.add_handler(CommandHandler("stop_backup_task", bot_command.stop_backup_task))
+    application.add_handler(CommandHandler("start_update_task", bot_command.start_update_task))
+    application.add_handler(CommandHandler("start_async_update_task", bot_command.start_async_update_task))
+    application.add_handler(CommandHandler("start_backup_task", bot_command.start_backup_task))
     application.add_handler(CommandHandler("force_update", bot_command.force_update))
     application.add_handler(CommandHandler("force_backup", bot_command.force_backup))
     application.add_handler(CommandHandler("start", bot_command.start))
@@ -89,18 +93,21 @@ async def run_bot():
                                             , pool_timeout=600, connect_timeout=600, timeout=600)
 
     # 两个后台任务
-    application.job_queue.run_repeating(update_bookmarks_record.update_task, interval=config.bookmarks_update_interval
-                                        , name="bookmarks_task", first=config.bookmarks_update_interval)
-    application.job_queue.run_repeating(update_illust.update_backup, interval=config.backup_interval, name="backup_task"
-                                        , first=config.backup_interval)
+    # application.job_queue.run_repeating(update_bookmarks_record.update_task, interval=config.bookmarks_update_interval
+    #                                     , name="bookmarks_task", first=config.bookmarks_update_interval)
+    # application.job_queue.run_repeating(update_illust.update_backup, interval=config.backup_interval, name="backup_task"
+    #                                     , first=config.backup_interval)
     logger.info("bot start")
 
     await application.bot.set_my_commands([
         BotCommand("start", "开始与帮助"),
         BotCommand("reload_config", "管理员命令,重新载入配置"),
-        BotCommand("reload_task", "管理员命令,重新运行定时任务"),
-        BotCommand("stop_task", "停止后台任务"),
-        BotCommand("force_update", "管理员命令,强制更新收藏列表"),
+        BotCommand("stop_update_task", "管理员命令,停止更新收藏列表后台任务"),
+        BotCommand("stop_backup_task", "管理员命令,停止备份收藏后台任务"),
+        BotCommand("start_update_task", "管理员命令,开始更新收藏列表后台任务"),
+        BotCommand("start_async_update_task", "管理员命令,开始更新收藏列表后台任务,但并发程度更高(没有delay的话会被ban号)"),
+        BotCommand("start_backup_task", "管理员命令,开始备份收藏后台任务"),
+        BotCommand("force_update", "管理员命令,强制启动一次更新收藏列表操作"),
         BotCommand("force_backup", "管理员命令,强制启动一次备份操作"),
         BotCommand("stop_bot", "管理员命令,停止bot")
     ])

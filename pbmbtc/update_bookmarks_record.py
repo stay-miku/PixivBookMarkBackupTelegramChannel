@@ -200,7 +200,7 @@ async def async_update_single(illust, update_meta, error_list: List):
 
 
 # update_meta用于指定是否强制更新已有记录的meta(默认task是False,可以手动运行,会很慢)
-async def update(update_meta: bool, delay: int, context: ContextTypes.DEFAULT_TYPE):
+async def update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_TYPE):
     start_time = time.time()
     logger.info(f"start update, update_meta: {update_meta}, delay: {delay}")
     user = await retry(pixiv.cookie_verify, 5, 0, cookie=config.cookie)
@@ -212,17 +212,21 @@ async def update(update_meta: bool, delay: int, context: ContextTypes.DEFAULT_TY
     logger.info(f"update, total illusts: {bookmarks['total']}")
 
     total = bookmarks['total']
-    i = 1
+    i = 0
+    error_list = []
     # 逆序
     for illust in bookmarks["illust"][::-1]:
-        await update_single(illust, update_meta)
+        await async_update_single(illust, update_meta, error_list)
         i += 1
-        logger.info(f"{i}/{total}, process: {i/total}")
+        logger.info(f"{i}/{total} completed, process: {i / total * 100}%")
         await asyncio.sleep(delay)
-
+    if error_list:
+        error_text = "\n".join([f"illust: {i['id']}, error: {i['error']}" for i in error_list])
+        await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误: \n{error_text}")
     with db.start_session() as session:
         # 删除所有未被更新的作品
-        unlike = session.query(db.Illust).filter_by(queried=0).all()
+        error_illusts = [i['id'] for i in error_list]
+        unlike = session.query(db.Illust).filter_by(queried=0).filter(db.Illust.id.notin_(error_illusts)).all()
         for un in unlike:
             await backup.delete_backup(un.id, session, context)
         # session.commit()  with内最好别手动commit
@@ -233,7 +237,8 @@ async def update(update_meta: bool, delay: int, context: ContextTypes.DEFAULT_TY
     logger.info(f"completed update, exc time: {end_time - start_time} sec")
 
 
-async def async_update(update_meta: bool, delay: int, context: ContextTypes.DEFAULT_TYPE):
+# 区别在于更新单个作品时是协程并发还是await单线程的
+async def async_update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_TYPE):
     start_time = time.time()
     logger.info(f"start asyncio update, update_meta: {update_meta}, delay: {delay}")
     user = await retry(pixiv.cookie_verify, 5, 0, cookie=config.cookie)
@@ -246,7 +251,7 @@ async def async_update(update_meta: bool, delay: int, context: ContextTypes.DEFA
     logger.info(f"update, total illusts: {bookmarks['total']}")
 
     total = bookmarks['total']
-    i = 1
+    i = 0
     error_list = []
     # 逆序
     for illust in bookmarks["illust"][::-1]:
@@ -271,10 +276,22 @@ async def async_update(update_meta: bool, delay: int, context: ContextTypes.DEFA
     logger.info(f"completed update, exc time: {end_time - start_time} sec")
 
 
-async def updateTask(context: ContextTypes.DEFAULT_TYPE):
+async def asyncUpdateTask(context: ContextTypes.DEFAULT_TYPE):
     try:
         # await update(False, 1, context) #?我什么时候把这delay设为1了,难怪这么慢
-        await async_update(False, 0, context)
+        await async_update(False, 0.1, context)     # 不能设为0,第一次运行直接把号跑ban掉
+    except Exception as e:
+        traceback.print_exception(type(e), e, e.__traceback__)
+        logger.error(f"Update error: {e}")
+        await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
+
+    logger.info("update task completed")
+
+
+async def updateTask(context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update(False, 0, context) #?我什么时候把这delay设为1了,难怪这么慢
+        # await async_update(False, 0, context)
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"Update error: {e}")
@@ -288,3 +305,7 @@ async def update_task(context: ContextTypes.DEFAULT_TYPE):
     logger.info("start update record")
     asyncio.create_task(updateTask(context))
 
+
+async def async_update_task(context: ContextTypes.DEFAULT_TYPE):
+    logger.info("start asyncio update record")
+    asyncio.create_task(asyncUpdateTask(context))
