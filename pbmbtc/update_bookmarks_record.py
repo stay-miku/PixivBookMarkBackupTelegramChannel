@@ -107,7 +107,7 @@ async def update_single(illust, update_meta):
 
 
 # update_single的异步数据库操作版本
-async def async_update_single(illust, update_meta, error_list: List):
+async def async_update_single(illust, update_meta, error_list: List) -> bool:
     try:
         illust_id = str(illust['id'])
         user_id = int(illust['userId'])
@@ -124,6 +124,8 @@ async def async_update_single(illust, update_meta, error_list: List):
                 if user_id == 0:
                     logger.debug(f"unavailable illust: {illust_id}")
                     exists.unavailable = 1
+                    await session.flush()
+                    return False
                 else:
                     # 更新meta 或 作品从失效到有效(这种情况只有作者把私有设为公开才行了)
                     if update_meta or exists.unavailable == 1:
@@ -141,9 +143,13 @@ async def async_update_single(illust, update_meta, error_list: List):
                         exists.ai = meta['aiType']
                         exists.detail = json.dumps(meta, ensure_ascii=False)
                         exists.unavailable = 0
+                        await session.flush()
+                        return True
                     # 不更新meta
                     else:
                         logger.debug(f"don't update: {illust_id}")
+                        await session.flush()
+                        return False
 
             # 记录不存在
             else:
@@ -168,6 +174,8 @@ async def async_update_single(illust, update_meta, error_list: List):
                     i.saved = 0
                     i.queried = 1
                     session.add(i)
+                    await session.flush()
+                    return False
                 else:
                     logger.debug(f"need backup: {illust_id}")
                     meta = await retry(pixiv.get_illust_meta, 5, 0, cookie=config.cookie, pid=illust_id)
@@ -189,14 +197,15 @@ async def async_update_single(illust, update_meta, error_list: List):
                     i.saved = 0
                     i.queried = 1
                     session.add(i)
-
-            await session.flush()
+                    await session.flush()
+                    return True
 
     except Exception as e:
         # 防止发生异常导致queried没被标记为1
         error_list.append({'id': illust['id'], 'error': str(e)})
         traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"asyncio update exception: {e}")
+        return True
 
 
 # update_meta用于指定是否强制更新已有记录的meta(默认task是False,可以手动运行,会很慢)
@@ -216,10 +225,12 @@ async def update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_
     error_list = []
     # 逆序
     for illust in bookmarks["illust"][::-1]:
-        await async_update_single(illust, update_meta, error_list)
+        result = await async_update_single(illust, update_meta, error_list)
         i += 1
         logger.info(f"{i}/{total} completed, process: {i / total * 100}%")
-        await asyncio.sleep(delay)
+        # 如果请求了api就sleep,没有就不sleep
+        if result:
+            await asyncio.sleep(delay)
     if error_list:
         error_text = "\n".join([f"illust: {i['id']}, error: {i['error']}" for i in error_list])
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误: \n{error_text}")
@@ -238,6 +249,7 @@ async def update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_
 
 
 # 区别在于更新单个作品时是协程并发还是await单线程的
+# 感觉用不上,至少第一次不能用这玩意
 async def async_update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_TYPE):
     start_time = time.time()
     logger.info(f"start asyncio update, update_meta: {update_meta}, delay: {delay}")
