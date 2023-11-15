@@ -230,6 +230,7 @@ async def update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_
         logger.info(f"{i}/{total} completed, process: {i / total * 100}%")
         # 如果请求了api就sleep,没有就不sleep
         if result:
+            logger.debug(f"sleep: {delay}")
             await asyncio.sleep(delay)
     if error_list:
         error_text = "\n".join([f"illust: {i['id']}, error: {i['error']}" for i in error_list])
