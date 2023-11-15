@@ -115,7 +115,7 @@ async def retry(func: Callable, retry_max_attempts: int, retry_delay: int, **kwa
 def format_tags(tags: Dict[str, List]):
     t = []
     for key in list(tags.keys()):
-        t.append(key + '=>' + '=>'.join(tags[key]))
+        t.append((key + '=>' + '=>'.join(tags[key])) if len(tags[key]) else key)
 
     return '\n'.join(t)
 
