@@ -1,6 +1,7 @@
 import contextlib
 
 from sqlalchemy import Column, String, create_engine, Integer, ForeignKey
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy.orm
@@ -89,10 +90,12 @@ class Backup(Base):
 
 
 engine = create_engine(f"sqlite:///{database_path}data.db", echo=debug)
+engine_asyncio = create_async_engine(f"sqlite+aiosqlite:///{database_path}data.db", echo=debug)
 
 Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
+Session_asyncio = async_sessionmaker(bind=engine_asyncio)
 
 
 @contextlib.contextmanager
@@ -107,4 +110,16 @@ def start_session() -> sqlalchemy.orm.Session:
     finally:
         s.close()
 
+
+@contextlib.asynccontextmanager
+async def start_async_session() -> AsyncSession:
+    s = Session_asyncio()
+    try:
+        yield s
+        await s.commit()
+    except Exception as e:
+        await s.rollback()
+        raise e
+    finally:
+        await s.close()
 
