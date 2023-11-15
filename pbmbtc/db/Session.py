@@ -26,17 +26,18 @@ class Bot(Base):
     key = Column(String, primary_key=True)  # bot的apikey
     admin = Column(String)                  # 拥有者的id
     cookie = Column(String)                 # pixiv cookie
-    gif_preview = Column(Integer)  # 使用转化为gif的动图作为动图作品的预览(否则动图第一帧为预览)
-    tmp_path = Column(String)  # 临时文件储存文件夹(如动图生成时临时存放图片帧和结果)(尽量将所有操作在内存中完成,所以内存占用可能不低www)
+    gif_preview = Column(Integer)           # 使用转化为gif的动图作为动图作品的预览(否则动图第一帧为预览)
+    tmp_path = Column(String)               # 临时文件储存文件夹(如动图生成时临时存放图片帧和结果)(尽量将所有操作在内存中完成,所以内存占用可能不低www)
     bookmarks_update_interval = Column(Integer)  # 收藏同步间隔,不能太高,单位为秒,可以bot命令强制更新一次
-    backup_interval = Column(Integer)  # 备份操作间隔,可以比收藏同步频率高
+    backup_interval = Column(Integer)       # 备份操作间隔,可以比收藏同步频率高
     backup_number_ontime = Column(Integer)  # 每次备份操作备份作品数量,不建议太高,尤其刚使用时
 
 
 class Illust(Base):
     __tablename__ = "illusts"
 
-    id = Column(String, primary_key=True)   # pid
+    private_id = Column(Integer, primary_key=True, autoincrement=True)      # 一般情况下没用的自增主键
+    id = Column(String, unique=True, index=True)                            # pid
     title = Column(String)                  # 标题
     type = Column(Integer)                  # 类型: 有插画 漫画 小说 动图
     comment = Column(String)                # 作品描述,由画师设置

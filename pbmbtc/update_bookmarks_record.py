@@ -115,7 +115,8 @@ async def update(update_meta: bool, delay: int, context: ContextTypes.DEFAULT_TY
 
     total = bookmarks['total']
     i = 1
-    for illust in bookmarks["illust"]:
+    # 逆序
+    for illust in bookmarks["illust"][::-1]:
         await update_single(illust, update_meta)
         i += 1
         logger.info(f"{i}/{total}, process: {i/total}")
