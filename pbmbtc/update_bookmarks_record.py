@@ -254,10 +254,13 @@ async def async_update(update_meta: bool, delay: int, context: ContextTypes.DEFA
         i += 1
         logger.info(f"{i}/{total} tasks added, process: {i / total * 100}%")
         await asyncio.sleep(delay)
-
+    if error_list:
+        error_text = "\n".join([f"illust: {i['id']}, error: {i['error']}" for i in error_list])
+        await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误: \n{error_text}")
     with db.start_session() as session:
         # 删除所有未被更新的作品
-        unlike = session.query(db.Illust).filter_by(queried=0).filter(db.Illust.id.notin_(error_list)).all()
+        error_illusts = [i['id'] for i in error_list]
+        unlike = session.query(db.Illust).filter_by(queried=0).filter(db.Illust.id.notin_(error_illusts)).all()
         for un in unlike:
             await backup.delete_backup(un.id, session, context)
         # session.commit()  with内最好别手动commit
@@ -270,7 +273,8 @@ async def async_update(update_meta: bool, delay: int, context: ContextTypes.DEFA
 
 async def updateTask(context: ContextTypes.DEFAULT_TYPE):
     try:
-        await update(False, 1, context)
+        # await update(False, 1, context) #?我什么时候把这delay设为1了,难怪这么慢
+        await async_update(False, 0, context)
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"Update error: {e}")
