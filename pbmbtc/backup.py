@@ -162,6 +162,10 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
                 illust = session.query(db.Illust).filter_by(id=illust_id).first()
             else:
                 illust = session.query(db.Illust).filter_by(backup=0).first()
+
+            if illust is None:
+                await context.bot.sendMessage(chat_id=config.admin, text="所有收藏均已备份,或者可以强制更新一次收藏列表")
+                return
             error_illust_id = illust.id
 
             if illust.unavailable == 1:
