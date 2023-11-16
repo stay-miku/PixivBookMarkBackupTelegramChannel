@@ -295,6 +295,9 @@ async def async_update(update_meta: bool, delay: float, context: ContextTypes.DE
 
         session.query(db.Illust).update({"queried": 0})
 
+    if not await db.drop_test():
+        await context.bot.sendMessage(chat_id=config.admin, text="删除测试数据失败")
+
     end_time = time.time()
     logger.info(f"completed update, exc time: {end_time - start_time} sec")
 
