@@ -251,7 +251,7 @@ async def update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_
 
 
 # 区别在于更新单个作品时是协程并发还是await单线程的
-# 感觉用不上,至少第一次不能用这玩意
+# 感觉用不上,至少第一次不能用这玩意(这个是因为感觉很慢才加上的(然后才发现是不小心relay 1秒了))
 async def async_update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_TYPE):
     start_time = time.time()
     logger.info(f"start asyncio update, update_meta: {update_meta}, delay: {delay}")
@@ -267,12 +267,14 @@ async def async_update(update_meta: bool, delay: float, context: ContextTypes.DE
     total = bookmarks['total']
     i = 0
     error_list = []
+    tasks = []
     # 逆序
     for illust in bookmarks["illust"][::-1]:
-        asyncio.create_task(async_update_single(illust, update_meta, error_list))
+        tasks.append(asyncio.create_task(async_update_single(illust, update_meta, error_list)))
         i += 1
         logger.info(f"{i}/{total} tasks added, process: {i / total * 100}%")
         await asyncio.sleep(delay)
+    await asyncio.gather(*tasks)
     if error_list:
         error_text = "\n".join([f"illust: {i['id']}, error: {i['error']}" for i in error_list])
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误: \n{error_text}")
@@ -304,6 +306,7 @@ async def asyncUpdateTask(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
 
     logger.info("update task completed")
+    await context.bot.sendMessage(chat_id=config.admin, text="更新收藏列表成功")
 
 
 async def updateTask(context: ContextTypes.DEFAULT_TYPE):
@@ -320,6 +323,7 @@ async def updateTask(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
 
     logger.info("update task completed")
+    await context.bot.sendMessage(chat_id=config.admin, text="更新收藏列表成功")
 
 
 async def update_task(context: ContextTypes.DEFAULT_TYPE):

@@ -8,6 +8,7 @@ from . import update_bookmarks_record
 import logging
 from . import db
 import asyncio
+from . import backup
 
 logger = logging.getLogger("bot_command")
 
@@ -195,6 +196,10 @@ async def add_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         illust_id = context.args[0]
         path = context.args[1]
+
+        await backup.send_backup_from_file(illust_id, path, context)
+
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="备份成功")
 
     except Exception as e:
         await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"发生错误: {e}")

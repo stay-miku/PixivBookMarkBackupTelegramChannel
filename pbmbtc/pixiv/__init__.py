@@ -11,6 +11,7 @@ from zipfile import ZipFile
 import logging
 import math
 import asyncio
+import aiofiles
 
 # 其实对于get请求和ffmpeg生成gif应该定义为协程的,但是...能跑就行,有机会再改改
 # 没有协程的问题只在于在更新和备份时bot会无响应)
@@ -24,7 +25,7 @@ async def get_ugoira(pid, u_cookie) -> Dict:
     logger.debug(f"ugoira: pid: {pid}")
     ugoira_meta = await get_ugoira_meta(pid, u_cookie)
     ugoira = await ugoira_download(ugoira_meta["originalSrc"])
-    file_name = ugoira_meta["originalSrc"].rsplit("/", 1)[1]
+    file_name = ugoira_meta["originalSrc"].rsplit("/", 1)[-1]
 
     return {"file": ugoira, "file_name": file_name, "meta": ugoira_meta}
 
@@ -83,8 +84,8 @@ async def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024 * 1024 * 50)
         raise Exception(
             f"stdout: {stdout.decode('utf-8')}\n--------------------------\nstderr: {stderr.decode('utf-8')}")
 
-    with open(os.path.join(tmp_path, gif_file_name), "rb") as f:
-        gif = f.read()
+    async with aiofiles.open(os.path.join(tmp_path, gif_file_name), "rb") as f:
+        gif = await f.read()
 
     # 压缩
     if len(gif) >= max_size:
@@ -105,8 +106,8 @@ async def get_ugoira_gif(file: bytes, meta, tmp_path, max_size=1024 * 1024 * 50)
             raise Exception(
                 f"stdout: {stdout.decode('utf-8')}\n--------------------------\nstderr: {stderr.decode('utf-8')}")
 
-        with open(os.path.join(tmp_path, gif_file_name), "rb") as f:
-            gif = f.read()
+        async with aiofiles.open(os.path.join(tmp_path, gif_file_name), "rb") as f:
+            gif = await f.read()
 
     logger.debug(f"ugoira gif: return, gif size: {len(gif)}")
     return gif
@@ -125,7 +126,7 @@ async def get_illust(pid, u_cookie) -> List[Dict]:
     for page in pages:
         url = page["urls"]["original"]
         file = await image_download(url)
-        file_name = url.rsplit("/", 1)[1]
+        file_name = url.rsplit("/", 1)[-1]
         illust.append({"file_name": file_name, "file": file})
 
     return illust

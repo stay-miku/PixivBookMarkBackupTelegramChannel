@@ -1,11 +1,14 @@
 import json
 import logging
+import os
+
+import aiofiles
 import sqlalchemy.orm
 from . import db
 from . import config
 from telegram.ext import ContextTypes
 from telegram import InputMediaPhoto, InputMediaDocument, Message
-from .utils import retry, compress_image_if_needed
+from .utils import retry, compress_image_if_needed, format_tags, get_illust_from_file, get_ugoira_from_file
 from . import pixiv
 from typing import Dict, List, Union
 import traceback
@@ -87,10 +90,13 @@ async def send_one_page(illust: db.Illust, session: sqlalchemy.orm.Session, cont
 
 
 async def send_illust(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE,
-                      have_sent: List):
-    illusts = await retry(pixiv.get_illust, 5, 0, pid=illust.id, u_cookie=config.cookie)
+                      have_sent: List, file_path=""):
+    if file_path:
+        illusts = await get_illust_from_file(file_path)
+    else:
+        illusts = await retry(pixiv.get_illust, 5, 0, pid=illust.id, u_cookie=config.cookie)
 
-    # 按张排序(虽然应该是已经排序好了的)
+    # 按张排序(虽然应该是已经排序好了的)(从文件读应该就不会排序好了)
     illusts = sorted(illusts, key=lambda x: int(x['file_name'].split('.', 1)[0].split('_p')[1]))
 
     page = 0
@@ -104,13 +110,16 @@ async def send_illust(illust: db.Illust, session: sqlalchemy.orm.Session, contex
 
 
 async def send_manga(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE,
-                     have_sent: List):
-    await send_illust(illust, session, context, have_sent)
+                     have_sent: List, file_path=""):
+    await send_illust(illust, session, context, have_sent, file_path)
 
 
 async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE,
-                      have_sent: List):
-    ugoira = await retry(pixiv.get_ugoira, 5, 0, pid=illust.id, u_cookie=config.cookie)
+                      have_sent: List, file_path=""):
+    if file_path:
+        ugoira = await get_ugoira_from_file(file_path)
+    else:
+        ugoira = await retry(pixiv.get_ugoira, 5, 0, pid=illust.id, u_cookie=config.cookie)
 
     ugoira_meta = ugoira['meta']
     ugoira_src = ugoira['file']
@@ -126,8 +135,11 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
         gif = await pixiv.get_ugoira_gif(ugoira_src, ugoira_meta, config.tmp_path)
         await send_medias(illust.id, 0, session, context, gif, send_file, introduce, True, have_sent, spoiler)
     else:
-        preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
-        send_preview = [InputMediaPhoto(preview_image[0]['file'], has_spoiler=spoiler)]
+        # preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
+        # send_preview = [InputMediaPhoto(preview_image[0]['file'], has_spoiler=spoiler)]
+        async with aiofiles.open(os.path.join(file_path, "images", os.listdir(os.path.join(file_path, "images"))[0]), "rb") as f:
+            preview_image = await f.read()
+        send_preview = [InputMediaPhoto(preview_image, has_spoiler=spoiler)]
         await send_medias(illust.id, 0, session, context, send_preview, send_file, introduce, False, have_sent)
 
     illust.backup = 1
@@ -186,16 +198,92 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
             logger.info(f"backup completed, illust: {illust.id}")
 
     except Exception as e:
+
+        task = context.job_queue.get_jobs_by_name("backup_task")
+        for job in task:
+            job.schedule_removal()
+        logger.info("delete task because of task error")
+
         for m in have_sent:
             await retry(context.bot.deleteMessage, 5, 0, chat_id=m['channel'], message_id=m['message_id'])
             logger.debug(f"delete message: {m}")
         logger.error(f"error: {e}")
         traceback.print_exception(type(e), e, e.__traceback__)
-        task = context.job_queue.get_jobs_by_name("backup_task")
-        for job in task:
-            job.schedule_removal()
-        logger.info("delete task because of task error")
         await retry(context.bot.sendMessage, 5, 0, chat_id=config.admin, text=f"发生错误: {e}, illust: {error_illust_id}")
+
+
+async def send_backup_from_file(illust_id: str, file_path: str, context: ContextTypes.DEFAULT_TYPE):
+    have_sent: List[Message] = []
+    error_illust_id = "0"
+    try:
+        with db.start_session() as session:
+            illust = session.query(db.Illust).filter_by(id=illust_id).first()
+
+            if illust is None:
+                await context.bot.sendMessage(chat_id=config.admin,
+                                              text="不存在的收藏")
+                return
+            elif illust.saved == 1:
+                await context.bot.sendMessage(chat_id=config.admin, text="作品已备份,无需再次备份")
+                return
+
+            async with aiofiles.open(os.path.join(file_path, "meta.json"), "r") as f:
+                meta = json.loads(await f.read())
+
+            illust.id = illust_id
+            illust.title = meta['illustTitle']
+            illust.type = meta['illustType']
+            illust.comment = meta['illustComment']
+            illust.tags = format_tags(pixiv.get_tags(meta))
+            illust.upload_date = meta['uploadDate']
+            illust.user_id = meta['userId']
+            illust.user_name = meta['userName']
+            illust.user_account = meta['userAccount']
+            illust.page_count = meta['pageCount']
+            illust.ai = meta['aiType']
+            illust.detail = json.dumps(meta, ensure_ascii=False)
+            illust.backup = 0
+            illust.unavailable = 1
+            illust.saved = 0
+            session.flush()
+
+            error_illust_id = illust.id
+
+            backup_messages = session.query(db.Backup).filter_by(id=illust.id).all()
+            preview_message = session.query(db.PreviewBackup).filter_by(id=illust.id).all()
+
+            for i in backup_messages:
+                await retry(context.bot.deleteMessage, 5, 0, chat_id=i.channel, message_id=i.message_id)
+
+            for i in preview_message:
+                await retry(context.bot.deleteMessage, 5, 0, chat_id=i.channel, message_id=i.message_id)
+
+            session.query(db.Backup).filter_by(id=illust.id).delete()
+            session.query(db.PreviewBackup).filter_by(id=illust.id).delete()
+
+            if illust.type == 0:
+                await send_illust(illust, session, context, have_sent)
+
+            elif illust.type == 1:
+                await send_manga(illust, session, context, have_sent)
+
+            elif illust.type == 2:
+                await send_ugoira(illust, session, context, have_sent)
+
+            else:
+                raise Exception(f"Unknown illust type: {illust.type}, id: {illust.id}")
+
+            logger.info(f"backup completed, illust: {illust.id}")
+
+    except Exception as e:
+
+        for m in have_sent:
+            await retry(context.bot.deleteMessage, 5, 0, chat_id=m['channel'], message_id=m['message_id'])
+            logger.debug(f"delete message: {m}")
+        logger.error(f"error: {e}")
+        traceback.print_exception(type(e), e, e.__traceback__)
+        await retry(context.bot.sendMessage, 5, 0, chat_id=config.admin,
+                    text=f"发生错误: {e}, illust: {error_illust_id}")
 
 
 async def delete_backup(illust: Union[str, db.Illust], session: sqlalchemy.orm.Session,

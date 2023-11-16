@@ -1,3 +1,7 @@
+import json
+import os
+import zipfile
+
 import telegram
 from PIL import Image
 import io
@@ -7,6 +11,7 @@ import time
 import traceback
 from typing import Callable, Dict, List
 import asyncio
+import aiofiles
 
 logger = logging.getLogger("utils")
 
@@ -118,4 +123,38 @@ def format_tags(tags: Dict[str, List]):
         t.append((key + '=>' + '=>'.join(tags[key])) if len(tags[key]) else key)
 
     return '\n'.join(t)
+
+
+async def get_illust_from_file(path: str):
+
+    files_path = [os.path.join(path, f) for f in os.listdir(path) if not f.endswith(".json")]
+
+    illust = []
+    for file in files_path:
+        async with aiofiles.open(file, "rb") as f:
+            i = await f.read()
+
+        illust.append({"file": i, "file_name": file.rsplit("/", 1)[-1]})
+
+    return illust
+
+
+async def get_ugoira_from_file(path: str):
+    in_memory_zip = io.BytesIO()  # 创建一个内存中的字节流对象，用于存储 ZIP 文件
+    ugoira_frames_list = [os.path.join(path, "images", i) for i in os.listdir(os.path.join(path, "images"))]
+    # 异步操作：将文件异步写入 ZIP
+    with zipfile.ZipFile(in_memory_zip, 'w') as zipf:
+        for file_path in ugoira_frames_list:
+            file_name = file_path.rsplit('/', 1)[-1]  # 提取文件名
+            zipf.write(file_path, arcname=file_name)
+
+    # 获取内存中的 ZIP 文件内容并返回字节流
+
+    async with aiofiles.open(os.path.join(path, "ugoira.json"), "r") as f:
+        ugoira_meta = json.loads(await f.read())
+
+    return {"file": in_memory_zip.getvalue(), "file_name": ugoira_meta["originalSrc"].rsplit("/", 1)[-1], "meta": ugoira_meta}
+
+
+
 
