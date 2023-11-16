@@ -166,6 +166,9 @@ async def send_unavailable(illust: db.Illust, context: ContextTypes.DEFAULT_TYPE
 
 # None为不指定id
 async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT_TYPE):
+    if not db.verify():
+        logger.warning("last task is running, skip")
+        return
     have_sent: List[Message] = []
     error_illust_id = "0"
     try:

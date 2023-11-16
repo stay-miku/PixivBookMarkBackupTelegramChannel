@@ -89,6 +89,13 @@ class Backup(Base):
     index = Column(Integer)                                                 # 分页的第几张
 
 
+# 没有任何用,拿来测试数据库可用性的
+class Test(Base):
+    __tablename__ = "test"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+
 engine = create_engine(f"sqlite:///{database_path}data.db", echo=debug)
 engine_asyncio = create_async_engine(f"sqlite+aiosqlite:///{database_path}data.db", echo=debug)
 
