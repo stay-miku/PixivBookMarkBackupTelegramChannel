@@ -20,6 +20,8 @@ header = {
     "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
 }
 
+timeout = httpx.Timeout(read=60, connect=10)
+
 
 # 图片的bytes,需自行根据链接判断图片格式
 async def image_download(url: str) -> bytes:
@@ -28,7 +30,7 @@ async def image_download(url: str) -> bytes:
     h = copy.deepcopy(header)
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, headers=h)
+        response = await client.get(url, headers=h, timeout=timeout)
     if response.status_code != 200:
         raise Exception(f"Image download: Error status code: {response.status_code}")
 
@@ -45,7 +47,7 @@ async def ugoira_download(url: str) -> bytes:
     h["accept"] = "*/*"
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, headers=h)
+        response = await client.get(url, headers=h, timeout=timeout)
     if response.status_code != 200:
         raise Exception(f"Download ugoira: Error status code: {response.status_code}")
 
