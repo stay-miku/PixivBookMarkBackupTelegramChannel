@@ -168,6 +168,7 @@ async def send_unavailable(illust: db.Illust, context: ContextTypes.DEFAULT_TYPE
 async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT_TYPE):
     if not db.verify():
         logger.warning("last task is running, skip")
+        context.bot.sendMessage(chat_id=config.admin, text="数据库被锁定,更新备份跳过")
         return
     have_sent: List[Message] = []
     error_illust_id = "0"
