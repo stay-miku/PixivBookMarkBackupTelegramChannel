@@ -19,7 +19,7 @@ logger = logging.getLogger("update bookmarks record")
 
 # 更新单个作品, illust为简略meta(bookmarks api传递的作品meta数据) update_meta为是否强制更新meta
 async def update_single(illust, update_meta):
-    if not db.verify():
+    if not await db.verify():
 
         return
     illust_id = str(illust['id'])
@@ -112,7 +112,7 @@ async def update_single(illust, update_meta):
 # update_single的异步数据库操作版本
 async def async_update_single(illust, update_meta, error_list: List) -> bool:
     try:
-        if not db.verify():
+        if not await db.verify():
             logger.warning("last task is running, skip the illusts")
             error_list.append({'id': illust['id'], 'error': "task running error"})
             return False
