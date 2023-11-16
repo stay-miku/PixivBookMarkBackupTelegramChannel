@@ -234,7 +234,8 @@ async def update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_
             await asyncio.sleep(delay)
     if error_list:
         error_text = "\n".join([f"illust: {i['id']}, error: {i['error']}" for i in error_list])
-        await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误: \n{error_text}")
+        logger.info(error_text)
+        await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误, 详情请查看日志")
     with db.start_session() as session:
         # 删除所有未被更新的作品
         error_illusts = [i['id'] for i in error_list]
