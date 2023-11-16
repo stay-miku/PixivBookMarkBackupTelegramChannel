@@ -179,7 +179,10 @@ async def shell(update: Update, context: ContextTypes.DEFAULT_TYPE):
     process = await asyncio.create_subprocess_shell(shell_command
                                                     , stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                                                     , shell=True)
-    stdout, stderr = await process.communicate()
+    stdout, stderr = await asyncio.wait_for(
+        process.communicate(),
+        timeout=60
+    )
 
     if process.returncode != 0:
         logger.warning(f"execute failed: {stderr.decode('utf-8')}")
