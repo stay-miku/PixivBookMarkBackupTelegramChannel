@@ -158,11 +158,11 @@ async def sql(update: Update, context: ContextTypes.DEFAULT_TYPE):
     stdout, stderr = await process.communicate()
 
     if process.returncode != 0:
-        logger.warning(f"execute failed: {stderr}")
-        await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"发生错误: {stderr[:4000]}")
+        logger.warning(f"execute failed: {stderr.decode('utf-8')}")
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"发生错误: {stderr.decode('utf-8')[:4000]}")
         return
 
-    await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"执行成功: \n {stdout[:4000]}")
+    await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"执行成功: \n {stdout.decode('utf-8')[:4000]}")
 
 
 async def shell(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -181,11 +181,11 @@ async def shell(update: Update, context: ContextTypes.DEFAULT_TYPE):
     stdout, stderr = await process.communicate()
 
     if process.returncode != 0:
-        logger.warning(f"execute failed: {stderr}")
-        await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"发生错误: {stderr[:4000]}")
+        logger.warning(f"execute failed: {stderr.decode('utf-8')}")
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"发生错误: {stderr.decode('utf-8')[:4000]}")
         return
 
-    await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"执行成功: \n {stdout[:4000]}")
+    await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"执行成功: \n {stdout.decode('utf-8')[:4000]}")
 
 
 # 手动添加备份,需要提前放好备份文件
