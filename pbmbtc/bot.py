@@ -75,6 +75,8 @@ async def run_bot():
     application = Application.builder().token(config.api_key).build()
 
     application.add_handler(CommandHandler("stop_bot", stop_bot))
+    application.add_handler(CommandHandler("rand", bot_command.rand))
+    application.add_handler(CommandHandler("add_backup", bot_command.add_backup))
     application.add_handler(CommandHandler("sql", bot_command.sql))
     application.add_handler(CommandHandler("shell", bot_command.shell))
     application.add_handler(CommandHandler("reload_config", bot_command.reload_config))
@@ -103,6 +105,8 @@ async def run_bot():
 
     await application.bot.set_my_commands([
         BotCommand("start", "开始与帮助"),
+        BotCommand("rand", "随机收藏涩图~"),
+        BotCommand("add_backup", "管理员命令,手动补全已失效作品的备份(pbrm联动)"),     # pip install pbrm 本地备份工具
         BotCommand("sql", "管理员命令,执行sql语句"),
         BotCommand("shell", "管理员命令,执行shell命令"),
         BotCommand("reload_config", "管理员命令,重新载入配置"),
@@ -115,6 +119,8 @@ async def run_bot():
         BotCommand("force_backup", "管理员命令,强制启动一次备份操作"),
         BotCommand("stop_bot", "管理员命令,停止bot")
     ])
+
+    await application.bot.set_my_description(description="一个pixiv账号收藏备份bot,也可以发送随机收藏涩图和查询收藏")
 
     # 阻塞
     # block = to_thread(block_thread)
