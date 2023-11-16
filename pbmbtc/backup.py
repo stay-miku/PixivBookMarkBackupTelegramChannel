@@ -264,13 +264,13 @@ async def send_backup_from_file(illust_id: str, file_path: str, context: Context
             session.query(db.PreviewBackup).filter_by(id=illust.id).delete()
 
             if illust.type == 0:
-                await send_illust(illust, session, context, have_sent)
+                await send_illust(illust, session, context, have_sent, file_path)
 
             elif illust.type == 1:
-                await send_manga(illust, session, context, have_sent)
+                await send_manga(illust, session, context, have_sent, file_path)
 
             elif illust.type == 2:
-                await send_ugoira(illust, session, context, have_sent)
+                await send_ugoira(illust, session, context, have_sent, file_path)
 
             else:
                 raise Exception(f"Unknown illust type: {illust.type}, id: {illust.id}")
