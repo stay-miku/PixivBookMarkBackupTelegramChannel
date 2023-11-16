@@ -1,5 +1,6 @@
 import traceback
 
+import telegram
 from telegram import Update
 from telegram.ext import ContextTypes
 from . import config
@@ -221,6 +222,11 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=illust.channel
                                              , message_id=illust.message_id)
             logger.info(f"rand backup: {illust.id}")
+    except telegram.error.RetryAfter as e:
+        # 按理来说出现retry after后下面这个应该执行不了,但是还是先写上好了
+        await context.bot.sendMessage(chat_id=update.effective_chat.id
+                                      , reply_to_message_id=update.effective_message.message_id
+                                      , text=f"发送过快,等待{e.retry_after}秒后再试")
 
     except Exception as e:
         logger.warning(f"rand exception: {e}")

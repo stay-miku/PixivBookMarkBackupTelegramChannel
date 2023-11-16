@@ -215,6 +215,8 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
 async def send_backup_from_file(illust_id: str, file_path: str, context: ContextTypes.DEFAULT_TYPE):
     have_sent: List[Message] = []
     error_illust_id = "0"
+    if not os.path.exists(os.path.join(file_path, "meta.json")):
+        await context.bot.sendMessage(chat_id=config.admin, text="错误的路径")
     try:
         with db.start_session() as session:
             illust = session.query(db.Illust).filter_by(id=illust_id).first()
