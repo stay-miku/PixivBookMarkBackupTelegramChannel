@@ -179,6 +179,8 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
                 await context.bot.sendMessage(chat_id=config.admin, text="所有收藏均已备份,或者可以强制更新一次收藏列表")
                 return
             error_illust_id = illust.id
+            illust.backup = 1               # 防止多个任务重复出现操作同一备份对象
+            session.flush()
 
             if illust.unavailable == 1:
                 await send_unavailable(illust, context, session, have_sent)
