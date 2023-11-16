@@ -20,7 +20,7 @@ header = {
     "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
 }
 
-timeout = httpx.Timeout(read=60, connect=10)
+timeout = httpx.Timeout(timeout=60)
 
 
 # 图片的bytes,需自行根据链接判断图片格式
