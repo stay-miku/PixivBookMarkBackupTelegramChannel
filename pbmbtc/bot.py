@@ -75,6 +75,8 @@ async def run_bot():
     application = Application.builder().token(config.api_key).build()
 
     application.add_handler(CommandHandler("stop_bot", stop_bot))
+    application.add_handler(CommandHandler("sql", bot_command.sql))
+    application.add_handler(CommandHandler("shell", bot_command.shell))
     application.add_handler(CommandHandler("reload_config", bot_command.reload_config))
     application.add_handler(CommandHandler("stop_update_task", bot_command.stop_update_task))
     application.add_handler(CommandHandler("stop_backup_task", bot_command.stop_backup_task))
@@ -101,6 +103,8 @@ async def run_bot():
 
     await application.bot.set_my_commands([
         BotCommand("start", "开始与帮助"),
+        BotCommand("sql", "管理员命令,执行sql语句"),
+        BotCommand("shell", "管理员命令,执行shell命令"),
         BotCommand("reload_config", "管理员命令,重新载入配置"),
         BotCommand("stop_update_task", "管理员命令,停止更新收藏列表后台任务"),
         BotCommand("stop_backup_task", "管理员命令,停止备份收藏后台任务"),

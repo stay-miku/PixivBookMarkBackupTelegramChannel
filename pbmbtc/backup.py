@@ -191,6 +191,10 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
             logger.debug(f"delete message: {m}")
         logger.error(f"error: {e}")
         traceback.print_exception(type(e), e, e.__traceback__)
+        task = context.job_queue.get_jobs_by_name("backup_task")
+        for job in task:
+            job.schedule_removal()
+        logger.info("delete task because of task error")
         await retry(context.bot.sendMessage, 5, 0, chat_id=config.admin, text=f"发生错误: {e}, illust: {error_illust_id}")
 
 

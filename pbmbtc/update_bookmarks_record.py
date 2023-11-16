@@ -297,6 +297,10 @@ async def asyncUpdateTask(context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"Update error: {e}")
+        task = context.job_queue.get_jobs_by_name("bookmarks_task")
+        for job in task:
+            job.schedule_removal()
+        logger.info("delete task because of task error")
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
 
     logger.info("update task completed")
@@ -309,6 +313,10 @@ async def updateTask(context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"Update error: {e}")
+        task = context.job_queue.get_jobs_by_name("bookmarks_task")
+        for job in task:
+            job.schedule_removal()
+        logger.info("delete task because of task error")
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
 
     logger.info("update task completed")
