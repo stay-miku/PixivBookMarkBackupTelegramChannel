@@ -2,6 +2,9 @@ import asyncio
 # import contextvars
 # import functools
 import logging
+
+import telegram
+
 # import time
 from . import config
 from . import update_illust
@@ -105,7 +108,6 @@ async def run_bot():
 
     await application.bot.set_my_commands([
         BotCommand("start", "开始与帮助"),
-        BotCommand("rand", "随机收藏涩图~"),
         BotCommand("add_backup", "管理员命令,手动补全已失效作品的备份(pbrm联动)"),     # pip install pbrm 本地备份工具
         BotCommand("sql", "管理员命令,执行sql语句"),
         BotCommand("shell", "管理员命令,执行shell命令"),
@@ -118,7 +120,12 @@ async def run_bot():
         BotCommand("force_update", "管理员命令,强制启动一次更新收藏列表操作"),
         BotCommand("force_backup", "管理员命令,强制启动一次备份操作"),
         BotCommand("stop_bot", "管理员命令,停止bot")
-    ])
+    ], scope=telegram.BotCommandScopeAllPrivateChats)
+
+    await application.bot.set_my_commands([
+        BotCommand("rand", "随机收藏涩图~")
+
+    ], scope=telegram.BotCommandScopeDefault)
 
     await application.bot.set_my_description(description="一个pixiv账号收藏备份bot,也可以发送随机收藏涩图和查询收藏")
 
