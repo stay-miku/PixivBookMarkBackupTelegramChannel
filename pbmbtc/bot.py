@@ -91,6 +91,7 @@ async def run_bot():
     application.add_handler(CommandHandler("force_update", bot_command.force_update))
     application.add_handler(CommandHandler("force_backup", bot_command.force_backup))
     application.add_handler(CommandHandler("start", bot_command.start))
+    application.add_handler(CommandHandler("force_backup_one", bot_command.force_backup_one))
 
 
     # 开始运行bot
@@ -119,6 +120,7 @@ async def run_bot():
         BotCommand("start_backup_task", "管理员命令,开始备份收藏后台任务"),
         BotCommand("force_update", "管理员命令,强制启动一次更新收藏列表操作"),
         BotCommand("force_backup", "管理员命令,强制启动一次备份操作"),
+        BotCommand("force_backup_one", "管理员命令,强制更新指定作品"),
         BotCommand("stop_bot", "管理员命令,停止bot")
     ], scope=telegram.BotCommandScopeAllPrivateChats())
 

@@ -234,3 +234,21 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.warning(f"rand exception: {e}")
         traceback.print_exception(type(e), e, e.__traceback__)
+
+
+async def force_backup_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_user.id == int(config.admin):
+        await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
+                                      chat_id=update.effective_chat.id, text="你不是管理员")
+        logger.info(f"some one use admin command force_backup_one: {update.effective_user.id}")
+        return
+
+    try:
+        illust_id = context.args[0]
+
+        await backup.send_backup(illust_id, context)
+
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作完成")
+    except Exception as e:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"发生错误: {e}")
+        traceback.print_exception(type(e), e, e.__traceback__)

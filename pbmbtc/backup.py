@@ -162,17 +162,18 @@ async def send_unavailable(illust: db.Illust, context: ContextTypes.DEFAULT_TYPE
     for channel in config.get_channel_id():
         sent_message = await retry(context.bot.sendMessage, 5, 0, chat_id=channel, text=f"已失效作品: {illust.id}")
 
-        have_sent.append(sent_message)
+        have_sent.append({"message": sent_message.message_id, "channel": channel})
 
         record = db.PreviewBackup()
         record.id = illust.id
-        record.page = 1
+        record.page = 0
         record.channel = channel
         record.message_id = sent_message.message_id
-        record.index = 1
+        record.index = 0
         session.add(record)
 
         illust.backup = 1
+        session.flush()
 
 
 # None为不指定id
@@ -186,7 +187,7 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
     try:
         with db.start_session() as session:
             if illust_id:
-                illust = session.query(db.Illust).filter_by(id=illust_id).first()
+                illust = session.query(db.Illust).filter_by(id=illust_id, backup=0).first()
             else:
                 illust = session.query(db.Illust).filter_by(backup=0).first()
 
@@ -195,7 +196,7 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
                 return
             error_illust_id = illust.id
             illust.backup = 1               # 防止多个任务重复出现操作同一备份对象
-            session.flush()
+            session.flush()                 # 其实这个没这个作用,防止同时操作由判断数据库是否被锁来处理了
 
             if illust.unavailable == 1:
                 await send_unavailable(illust, context, session, have_sent)
