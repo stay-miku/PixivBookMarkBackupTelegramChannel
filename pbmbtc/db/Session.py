@@ -87,6 +87,7 @@ class Backup(Base):
     message_id = Column(String, index=True)                                 # 对应消息id
     page = Column(Integer)                                                  # 对于张数超过10张的作品会分页发送
     index = Column(Integer)                                                 # 分页的第几张
+    size = Column(Integer)                                                  # 文件大小
 
 
 # 没有任何用,拿来测试数据库可用性的

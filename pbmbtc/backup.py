@@ -10,8 +10,9 @@ from telegram.ext import ContextTypes
 from telegram import InputMediaPhoto, InputMediaDocument, Message
 from .utils import retry, compress_image_if_needed, format_tags, get_illust_from_file, get_ugoira_from_file
 from . import pixiv
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 import traceback
+from sqlalchemy.future import select
 
 logger = logging.getLogger("backup")
 
@@ -57,6 +58,7 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
                                    , connect_timeout=600)
         have_sent += [{"message_id": i.message_id, "channel": channel} for i in file_message]
 
+
         for i in range(len(preview_message)):
             m = preview_message[i]
             record = db.PreviewBackup()
@@ -68,13 +70,14 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
             session.add(record)
 
         for i in range(len(file_message)):
-            m = file_message[i]
+            m: Message = file_message[i]
             record = db.Backup()
             record.id = illust
             record.message_id = m.message_id
             record.page = page
             record.index = i
             record.channel = channel
+            record.size = m.document.file_size
             session.add(record)
 
 
