@@ -106,6 +106,8 @@ async def send_illust(illust: db.Illust, session: sqlalchemy.orm.Session, contex
 
     for page in pages:
         logger.debug(f"send page: size: {page['size']}, page: {page['page']}, page_count: {len(page['illusts'])}")
+        if page["size"] >= 1024*1024*50:
+            raise Exception("page size > 50MB")
         await send_one_page(illust, session, context, page["illusts"], page["page"], have_sent)
 
     # page = 0
