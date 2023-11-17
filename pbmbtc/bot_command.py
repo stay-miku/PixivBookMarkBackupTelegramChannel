@@ -294,7 +294,7 @@ async def pagermaid(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     plugin = plugin.replace("pixivBookmarksBackupBot", bot_username)
 
-    await context.bot.send_document(chat_id=update.effective_chat, document=plugin.encode("utf-8")
+    await context.bot.send_document(chat_id=update.effective_chat.id, document=plugin.encode("utf-8")
                                     , filename=f"{bot_username}_plugin.py")
 
 
