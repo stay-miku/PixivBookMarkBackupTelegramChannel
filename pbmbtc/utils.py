@@ -164,6 +164,8 @@ def divide_pages(illusts: List[Dict], max_size=1024*1204*50, max_count=10):
     illust_pages = []
 
     for illust in illusts:
+        if len(illust["file"]) >= max_size:
+            raise Exception(f"single file size > max_size: {max_size}")
         # 首次遍历
         if len(illust_pages) <= page:
             illust_pages.append({"page": page, "illusts": [], "size": 0})
