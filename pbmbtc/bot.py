@@ -132,7 +132,7 @@ async def run_bot():
     await application.bot.set_my_commands([
         BotCommand("rand", "随机收藏涩图~"),
         BotCommand("pagermaid", "获取快捷rand的pagermaid插件")
-    ])
+    ], scope=telegram.BotCommandScopeDefault())
 
     await application.bot.set_my_description(description="一个pixiv账号收藏备份bot,也可以发送随机收藏涩图和查询收藏")
 
