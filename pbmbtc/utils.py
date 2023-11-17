@@ -161,19 +161,16 @@ async def get_ugoira_from_file(path: str):
 def divide_pages(illusts: List[Dict], max_size=1024*1204*50, max_count=10):
 
     page = 0
-    illust_pages = []
+    illust_pages = [{"page": page, "illusts": [], "size": 0}]
 
     for illust in illusts:
         if len(illust["file"]) >= max_size:
-            raise Exception(f"single file size > max_size: {max_size}")
-        # 首次遍历
-        if len(illust_pages) <= page:
-            illust_pages.append({"page": page, "illusts": [], "size": 0})
+            raise Exception(f"single file size: {len(illust['file'])} > max_size: {max_size}, file_name: {illust['file_name']}")
 
         # 判断约束条件
-        if illust_pages[page]["size"] + len(illust["file"]) < max_size and len(illust_pages[page]["illusts"]) < max_count:
-            illust_pages[page]["illusts"].append(illust)
-            illust_pages[page]["size"] += len(illust["file"])
+        if (illust_pages[page]['size'] + len(illust['file'])) < max_size and len(illust_pages[page]['illusts']) < max_count:
+            illust_pages[page]['illusts'].append(illust)
+            illust_pages[page]['size'] += len(illust['file'])
 
         # 新page
         else:
