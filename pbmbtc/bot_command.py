@@ -1,5 +1,6 @@
 import traceback
 
+import aiofiles
 import telegram
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -217,7 +218,7 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
 
         async with db.start_async_session() as session:
-            query = select(db.PreviewBackup).order_by(func.random()).limit(1)
+            query = select(db.PreviewBackup).join(db.Illust).filter_by(saved=1).order_by(func.random()).limit(1)
             result = await session.execute(query)
 
             illust = result.first()[0]
@@ -282,3 +283,18 @@ async def backup_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.sendMessage(chat_id=update.effective_chat.id, text="周期任务已启动")
     else:
         await context.bot.sendMessage(chat_id=update.effective_chat.id, text="周期任务未启动")
+
+
+async def pagermaid(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    bot_username = context.bot.name.rsplit("@", 1)[-1]
+
+    async with aiofiles.open("./pagermaid/plugin.py", "r") as f:
+        plugin = await f.read()
+
+    plugin = plugin.replace("pixivBookmarksBackupBot", bot_username)
+
+    await context.bot.send_document(chat_id=update.effective_chat, document=plugin.encode("utf-8")
+                                    , filename=f"{bot_username}_plugin.py")
+
+

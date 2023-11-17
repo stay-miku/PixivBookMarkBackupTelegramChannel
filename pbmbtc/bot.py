@@ -94,6 +94,7 @@ async def run_bot():
     application.add_handler(CommandHandler("force_backup_one", bot_command.force_backup_one))
     application.add_handler(CommandHandler("update_status", bot_command.update_status))
     application.add_handler(CommandHandler("backup_status", bot_command.backup_status))
+    application.add_handler(CommandHandler("pagermaid", bot_command.pagermaid))
 
 
     # 开始运行bot
@@ -129,8 +130,8 @@ async def run_bot():
     ], scope=telegram.BotCommandScopeAllPrivateChats())
 
     await application.bot.set_my_commands([
-        BotCommand("rand", "随机收藏涩图~")
-
+        BotCommand("rand", "随机收藏涩图~"),
+        BotCommand("pagermaid", "获取快捷rand的pagermaid插件")
     ])
 
     await application.bot.set_my_description(description="一个pixiv账号收藏备份bot,也可以发送随机收藏涩图和查询收藏")
