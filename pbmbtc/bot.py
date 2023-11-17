@@ -92,6 +92,8 @@ async def run_bot():
     application.add_handler(CommandHandler("force_backup", bot_command.force_backup))
     application.add_handler(CommandHandler("start", bot_command.start))
     application.add_handler(CommandHandler("force_backup_one", bot_command.force_backup_one))
+    application.add_handler(CommandHandler("update_status", bot_command.update_status))
+    application.add_handler(CommandHandler("backup_status", bot_command.backup_status))
 
 
     # 开始运行bot
@@ -112,6 +114,8 @@ async def run_bot():
         BotCommand("add_backup", "管理员命令,手动补全已失效作品的备份(pbrm联动)"),     # pip install pbrm 本地备份工具
         BotCommand("sql", "管理员命令,执行sql语句"),
         BotCommand("shell", "管理员命令,执行shell命令"),
+        BotCommand("update_status", "管理员命令,查询更新任务状态"),
+        BotCommand("backup_status", "管理员命令,查询备份任务状态"),
         BotCommand("reload_config", "管理员命令,重新载入配置"),
         BotCommand("stop_update_task", "管理员命令,停止更新收藏列表后台任务"),
         BotCommand("stop_backup_task", "管理员命令,停止备份收藏后台任务"),

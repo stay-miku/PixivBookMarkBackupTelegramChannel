@@ -252,3 +252,33 @@ async def force_backup_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"发生错误: {e}")
         traceback.print_exception(type(e), e, e.__traceback__)
+
+
+async def update_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_user.id == int(config.admin):
+        await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
+                                      chat_id=update.effective_chat.id, text="你不是管理员")
+        logger.info(f"some one use admin command update_status: {update.effective_user.id}")
+        return
+
+    tasks = context.job_queue.get_jobs_by_name("bookmarks_task")
+
+    if tasks:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="周期任务已启动")
+    else:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="周期任务未启动")
+
+
+async def backup_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_user.id == int(config.admin):
+        await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
+                                      chat_id=update.effective_chat.id, text="你不是管理员")
+        logger.info(f"some one use admin command backup_status: {update.effective_user.id}")
+        return
+
+    tasks = context.job_queue.get_jobs_by_name("backup_task")
+
+    if tasks:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="周期任务已启动")
+    else:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="周期任务未启动")
