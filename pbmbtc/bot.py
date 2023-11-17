@@ -120,7 +120,7 @@ async def run_bot():
         BotCommand("force_update", "管理员命令,强制启动一次更新收藏列表操作"),
         BotCommand("force_backup", "管理员命令,强制启动一次备份操作"),
         BotCommand("stop_bot", "管理员命令,停止bot")
-    ], scope=telegram.BotCommandScopeAllPrivateChats)
+    ])
 
     # await application.bot.set_my_commands([
     #     BotCommand("rand", "随机收藏涩图~")
