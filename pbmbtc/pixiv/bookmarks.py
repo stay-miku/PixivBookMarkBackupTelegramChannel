@@ -23,7 +23,7 @@ async def get_bookmarks(cookie: str, user: str):
         "sec-ch-ua": "\"Google Chrome\";v=\"111\", \"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"111\"",
         "pragma": "no-cache",
         "cache-control": "no-cache",
-        "accept-encoding": "gzip, deflate, br",
+        # "accept-encoding": "gzip, deflate, br",
         "accept": "application/json",
         "x-user-id": user
     }

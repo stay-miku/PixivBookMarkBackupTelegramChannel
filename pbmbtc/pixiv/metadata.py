@@ -11,15 +11,14 @@ logger.setLevel(logging.DEBUG)
 # 通用header
 header = {
     "cookie": "",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/111.0.0.0 Safari/537.36",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
     "sec-ch-ua-platform": "\"Windows\"",
     "sec-ch-ua": "\"Google Chrome\";v=\"111\", \"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"111\"",
     "referer": "",
     "pragma": "no-cache",
     "cache-control": "no-cache",
-    "accept-encoding": "gzip, deflate, br",
-    "accept": "*/*"
+    # "accept-encoding": "gzip, deflate, br, zstd",
+    "accept": "application/json"
 }
 
 referer = "https://www.pixiv.net/artworks/{}"
