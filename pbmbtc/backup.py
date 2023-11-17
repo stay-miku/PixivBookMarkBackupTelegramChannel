@@ -8,7 +8,7 @@ from . import db
 from . import config
 from telegram.ext import ContextTypes
 from telegram import InputMediaPhoto, InputMediaDocument, Message
-from .utils import retry, compress_image_if_needed, format_tags, get_illust_from_file, get_ugoira_from_file
+from .utils import retry, compress_image_if_needed, format_tags, get_illust_from_file, get_ugoira_from_file, divide_pages
 from . import pixiv
 from typing import Dict, List, Union, Tuple
 import traceback
@@ -102,11 +102,17 @@ async def send_illust(illust: db.Illust, session: sqlalchemy.orm.Session, contex
     # 按张排序(虽然应该是已经排序好了的)(从文件读应该就不会排序好了)
     illusts = sorted(illusts, key=lambda x: int(x['file_name'].split('.', 1)[0].split('_p')[1]))
 
-    page = 0
-    while page * 10 < len(illusts):
-        await send_one_page(illust, session, context, illusts[page * 10:page * 10 + 10], page, have_sent)
+    pages = divide_pages(illusts)
 
-        page += 1
+    for page in pages:
+        logger.debug(f"send page: size: {page['size']}, page: {page['page']}, page_count: {len(pages['illusts'])}")
+        await send_one_page(illust, session, context, page["illusts"], page["page"], have_sent)
+
+    # page = 0
+    # while page * 10 < len(illusts):
+    #     await send_one_page(illust, session, context, illusts[page * 10:page * 10 + 10], page, have_sent)
+    #
+    #     page += 1
 
     illust.backup = 1
     illust.saved = 1
