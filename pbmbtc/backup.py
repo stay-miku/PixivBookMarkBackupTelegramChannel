@@ -105,7 +105,7 @@ async def send_illust(illust: db.Illust, session: sqlalchemy.orm.Session, contex
     pages = divide_pages(illusts)
 
     for page in pages:
-        logger.debug(f"send page: size: {page['size']}, page: {page['page']}, page_count: {len(pages['illusts'])}")
+        logger.debug(f"send page: size: {page['size']}, page: {page['page']}, page_count: {len(page['illusts'])}")
         await send_one_page(illust, session, context, page["illusts"], page["page"], have_sent)
 
     # page = 0
