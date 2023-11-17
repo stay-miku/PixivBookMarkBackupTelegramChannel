@@ -158,7 +158,7 @@ async def get_ugoira_from_file(path: str):
 
 # 两个限制,一是单次发送文件总大小不超过50MB,二是media group不超过10个media
 # 顺序应该没什么问题,大概
-def divide_pages(illusts: List[Dict], max_size=1024*1204*50, max_count=10):
+def divide_pages(illusts: List[Dict], max_size=1024*1024*50, max_count=10):
 
     page = 0
     illust_pages = [{"page": page, "illusts": [], "size": 0}]
@@ -167,14 +167,16 @@ def divide_pages(illusts: List[Dict], max_size=1024*1204*50, max_count=10):
         if len(illust["file"]) >= max_size:
             raise Exception(f"single file size: {len(illust['file'])} > max_size: {max_size}, file_name: {illust['file_name']}")
 
-        logger.debug(f"current page size: {illust_pages[page]['size']}, illust size: {len(illust['file'])}, size: {illust_pages[page]['size'] + len(illust['file'])}")
+        # logger.debug(f"page: {page}, current page size: {illust_pages[page]['size']}, illust size: {len(illust['file'])}, size: {illust_pages[page]['size'] + len(illust['file'])}")
         # 判断约束条件
         if (illust_pages[page]['size'] + len(illust['file'])) < max_size and len(illust_pages[page]['illusts']) < max_count:
+            # logger.debug(f"add illust to this page: {page}")
             illust_pages[page]['illusts'].append(illust)
             illust_pages[page]['size'] += len(illust['file'])
 
         # 新page
         else:
+            # logger.debug(f"create a new page")
             page += 1
             illust_pages.append({"page": page, "illusts": [illust], "size": len(illust["file"])})
 
