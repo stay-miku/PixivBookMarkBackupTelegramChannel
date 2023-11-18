@@ -433,7 +433,8 @@ async def just_delete_backup(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
 
     if context.args:
-        await backup.just_delete_backup(context.args[0], context)
-
+        result = await backup.just_delete_backup(context.args[0], context)
+        if result:
+            await context.bot.sendMessage(chat_id=update.effective_chat.id, text="删除成功")
     else:
         await context.bot.sendMessage(chat_id=update.effective_chat.id, text="参数不足")

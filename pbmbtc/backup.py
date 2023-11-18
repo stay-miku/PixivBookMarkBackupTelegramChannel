@@ -372,6 +372,9 @@ async def just_delete_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE)
         for message in messages:
             await retry(context.bot.deleteMessage, 5, 0, chat_id=message["channel"], message_id=message["message_id"])
 
+        return True
+
     except Exception as e:
         await context.bot.sendMessage(chat_id=config.admin, text=f"发生错误: {e}")
         traceback.print_exception(type(e), e, e.__traceback__)
+        return False
