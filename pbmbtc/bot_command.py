@@ -19,7 +19,8 @@ logger = logging.getLogger("bot_command")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="使用/rand获取随机收藏作品\n使用/search搜索想要的作品\n使用/plugin获取适用于pagermaid的快捷插件")
+    await context.bot.sendMessage(chat_id=update.effective_chat.id,
+                                  text="使用/rand获取随机收藏作品\n使用/search搜索想要的作品\n使用/plugin获取适用于pagermaid的快捷插件")
     pass
 
 
@@ -165,12 +166,14 @@ async def sql(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(stderr.decode("utf-8")) > 4000:
             await context.bot.sendDocument(chat_id=update.effective_chat.id, document=stderr, filename="error.log")
         else:
-            await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"sqlite> {sql_str} \n{stderr.decode('utf-8')}")
+            await context.bot.sendMessage(chat_id=update.effective_chat.id,
+                                          text=f"sqlite> {sql_str} \n{stderr.decode('utf-8')}")
         return
     if len(stdout.decode("utf-8")) > 4000:
         await context.bot.sendDocument(chat_id=update.effective_chat.id, document=stdout, filename="sqlite.log")
     else:
-        await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"sqlite> {sql_str} \n{stdout.decode('utf-8')}")
+        await context.bot.sendMessage(chat_id=update.effective_chat.id,
+                                      text=f"sqlite> {sql_str} \n{stdout.decode('utf-8')}")
 
 
 async def shell(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -196,12 +199,14 @@ async def shell(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(stderr.decode("utf-8")) > 4000:
             await context.bot.sendDocument(chat_id=update.effective_chat.id, document=stderr, filename="error.log")
         else:
-            await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"~# {shell_command} \n{stderr.decode('utf-8')}")
+            await context.bot.sendMessage(chat_id=update.effective_chat.id,
+                                          text=f"~# {shell_command} \n{stderr.decode('utf-8')}")
         return
 
     if len(stdout.decode("utf-8")) > 4000:
         await context.bot.sendDocument(chat_id=update.effective_chat.id, document=stdout, filename="shell.log")
-    await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"~# {shell_command} \n{stdout.decode('utf-8')}")
+    await context.bot.sendMessage(chat_id=update.effective_chat.id,
+                                  text=f"~# {shell_command} \n{stdout.decode('utf-8')}")
 
 
 # 手动添加备份,需要提前放好备份文件
@@ -232,11 +237,12 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
             search_keywords = re.split(r'[,，]', " ".join(context.args))
             logger.info(f"{update.effective_user.id}:{update.effective_user.username} rand tag: {search_keywords}")
 
-            condition = [db.Illust.tags.like(f"%{keyword}%") for keyword in search_keywords]    # 关键词
-            condition.append(db.Illust.saved == 1)                                              # 需被保存
+            condition = [db.Illust.tags.like(f"%{keyword}%") for keyword in search_keywords]  # 关键词
+            condition.append(db.Illust.saved == 1)  # 需被保存
 
             async with db.start_async_session() as session:
-                query = select(db.PreviewBackup).join(db.Illust).filter(and_(*condition)).order_by(func.random()).limit(1)
+                query = select(db.PreviewBackup).join(db.Illust).filter(and_(*condition)).order_by(func.random()).limit(
+                    1)
                 result = await session.execute(query)
 
                 illust = result.first()
@@ -265,7 +271,8 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=illust.channel
                                                  , message_id=illust.message_id)
                 if update.effective_user.name:
-                    logger.info(f"rand backup: {illust.id}, user: {update.effective_user.id}, username: {update.effective_user.username}")
+                    logger.info(
+                        f"rand backup: {illust.id}, user: {update.effective_user.id}, username: {update.effective_user.username}")
                 else:
                     logger.info(f"rand backup: {illust.id}, user: {update.effective_user.id}")
     except telegram.error.RetryAfter as e:
@@ -331,7 +338,6 @@ async def backup_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def plugin_(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     bot_username = context.bot.name.rsplit("@", 1)[-1]
 
     async with aiofiles.open("./pagermaid/plugin.py", "r") as f:
@@ -363,7 +369,6 @@ async def admin_plugin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     if context.args:
 
         try:
@@ -375,8 +380,8 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except ValueError:
             search_keyword = re.split(r"[,，]", " ".join(context.args))
 
-            conditions = [func.concat(db.Illust.title, " ", db.Illust.tags, " ", db.Illust.user_name, " ",
-                                      db.Illust.user_account).like(f"%{i}%") for i in search_keyword]
+            conditions = [(db.Illust.title + " " + db.Illust.tags + " " + db.Illust.user_name + " " +
+                           db.Illust.user_account).like(f"%{i}%") for i in search_keyword]
             conditions.append(db.Illust.saved == 1)
             query = select(db.Illust).filter(and_(*conditions)).order_by(func.random()).limit(10)
 
@@ -392,8 +397,11 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     query = select(db.PreviewBackup).filter_by(id=illust.id).limit(1)
                     message_record_result = await session.execute(query)
                     message_reocrd = message_record_result.first()
-                    messages.append({"channel": message_reocrd.channel, "message_id": message_reocrd.message_id, "id": message_reocrd.id})
-                send_text = "\n".join([f"<a href=\"https://t.me/c/{i['channel'][4:]}/{i['message_id']}\">{i['id']}</a>" for i in messages])
+                    messages.append({"channel": message_reocrd.channel, "message_id": message_reocrd.message_id,
+                                     "id": message_reocrd.id})
+                send_text = "\n".join(
+                    [f"<a href=\"https://t.me/c/{i['channel'][4:]}/{i['message_id']}\">{i['id']}</a>" for i in
+                     messages])
 
                 if update.effective_chat.type == "PRIVATE":
                     await context.bot.sendMessage(chat_id=update.effective_chat.id, text=send_text, parse_mode="HTML")
@@ -402,6 +410,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                   , reply_to_message_id=update.effective_message.id)
 
             else:
+                logger.info(update.effective_chat.type)
                 if update.effective_chat.type == "PRIVATE":
                     await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到作品")
                 else:
