@@ -271,7 +271,7 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=illust.channel
                                                  , message_id=illust.message_id)
-                if update.effective_user.name:
+                if update.effective_user.username:
                     logger.info(
                         f"rand backup: {illust.id}, user: {update.effective_user.id}, username: {update.effective_user.username}")
                 else:
@@ -370,6 +370,7 @@ async def admin_plugin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(f"search: user: {update.effective_user.id}, name: {update.effective_user.username}, args: {context.args}")
     if context.args:
 
         try:
