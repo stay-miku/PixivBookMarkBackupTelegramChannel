@@ -97,6 +97,7 @@ async def run_bot():
     application.add_handler(CommandHandler("plugin", bot_command.plugin_))
     application.add_handler(CommandHandler("admin_plugin", bot_command.admin_plugin))
     application.add_handler(CommandHandler("search", bot_command.search))
+    application.add_handler(CommandHandler("just_delete_backup", bot_command.just_delete_backup))
 
 
     # 开始运行bot
@@ -128,6 +129,7 @@ async def run_bot():
         BotCommand("add_backup", "管理员命令,手动补全已失效作品的备份(pbrm联动)"),     # pip install pbrm 本地备份工具
         BotCommand("sql", "管理员命令,执行sql语句"),
         BotCommand("shell", "管理员命令,执行shell命令"),
+        BotCommand("just_delete_backup", "管理员命令,仅删除作品备份,作品回归到未备份状态"),
         BotCommand("update_status", "管理员命令,查询更新任务状态"),
         BotCommand("backup_status", "管理员命令,查询备份任务状态"),
         BotCommand("reload_config", "管理员命令,重新载入配置"),

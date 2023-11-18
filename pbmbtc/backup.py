@@ -32,7 +32,7 @@ def get_introduce(illust: db.Illust):
 
 async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE,
                       send_preview: Union[List, bytes], send_file: List, introduce, is_ugoira, have_sent: List,
-                      spoiler=False):
+                      spoiler=False, thumbnail=None):
     channels = config.get_channel_id()
 
     for channel in channels:
@@ -46,8 +46,8 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
 
         else:
             preview_message = await retry(context.bot.sendAnimation, 5, 0, chat_id=channel, animation=send_preview,
-                                          parse_mode='HTML'
-                                          , caption=introduce, has_spoiler=spoiler
+                                          parse_mode='HTML', filename=f"{illust}.gif"
+                                          , caption=introduce, has_spoiler=spoiler, thumbnail=thumbnail
                                           , pool_timeout=600, read_timeout=600, write_timeout=600
                                           , connect_timeout=600)
             have_sent.append({"message_id": preview_message.message_id, "channel": channel})
@@ -144,14 +144,23 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
                  InputMediaDocument(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8'),
                                     filename=f"{ugoira_file_name.split('.', 1)[0]}_meta.txt")]
     if config.gif_preview:
+        if file_path:
+            async with aiofiles.open(os.path.join(file_path, "images", os.listdir(os.path.join(file_path, "images"))[0]), "rb") as f:
+                preview_image = await f.read()
+            thumbnail = preview_image
+        else:
+            preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
+            thumbnail = preview_image[0]['file']
         gif = await pixiv.get_ugoira_gif(ugoira_src, ugoira_meta, config.tmp_path)
-        await send_medias(illust.id, 0, session, context, gif, send_file, introduce, True, have_sent, spoiler)
+        await send_medias(illust.id, 0, session, context, gif, send_file, introduce, True, have_sent, spoiler, thumbnail=thumbnail)
     else:
-        # preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
-        # send_preview = [InputMediaPhoto(preview_image[0]['file'], has_spoiler=spoiler)]
-        async with aiofiles.open(os.path.join(file_path, "images", os.listdir(os.path.join(file_path, "images"))[0]), "rb") as f:
-            preview_image = await f.read()
-        send_preview = [InputMediaPhoto(preview_image, has_spoiler=spoiler)]
+        if file_path:
+            async with aiofiles.open(os.path.join(file_path, "images", os.listdir(os.path.join(file_path, "images"))[0]), "rb") as f:
+                preview_image = await f.read()
+            send_preview = [InputMediaPhoto(preview_image, has_spoiler=spoiler)]
+        else:
+            preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
+            send_preview = [InputMediaPhoto(preview_image[0]['file'], has_spoiler=spoiler)]
         await send_medias(illust.id, 0, session, context, send_preview, send_file, introduce, False, have_sent)
 
     illust.backup = 1
@@ -324,3 +333,45 @@ async def delete_backup(illust: Union[str, db.Illust], session: sqlalchemy.orm.S
     session.query(db.Backup).filter_by(id=illust.id).delete()
     session.query(db.PreviewBackup).filter_by(id=illust.id).delete()
     session.query(db.Illust).filter_by(id=illust.id).delete()
+
+
+async def just_delete_backup(illust_id: str, context: ContextTypes.DEFAULT_TYPE):
+    try:
+
+        messages = []
+        async with db.start_async_session() as session:
+            query = select(db.Illust).filter_by(id=illust_id)
+            result = await session.execute(query)
+
+            illust = result.first()
+
+            if illust:
+                illust = illust[0]
+
+                if illust.saved == 0:
+                    await context.bot.sendMessage(chat_id=config.admin, text="作品未备份")
+                    return
+
+                else:
+                    illust.saved = 0
+                    illust.backup = 0
+
+                    backup_message = (await session.execute(select(db.Backup).filter_by(id=illust_id))).all()
+                    for message in backup_message:
+                        messages.append({"channel": message[0].channel, "message_id": message[0].message_id})
+                        await session.delete(message[0])
+                    preview_message = (await session.execute(select(db.PreviewBackup).filter_by(id=illust_id))).all()
+                    for message in preview_message:
+                        messages.append({"channel": message[0].channel, "message_id": message[0].message_id})
+                        await session.delete(message[0])
+
+            else:
+                await context.bot.sendMessage(chat_id=config.admin, text="不存在的作品id")
+                return
+
+        for message in messages:
+            await retry(context.bot.deleteMessage, 5, 0, chat_id=message["channel"], message_id=message["message_id"])
+
+    except Exception as e:
+        await context.bot.sendMessage(chat_id=config.admin, text=f"发生错误: {e}")
+        traceback.print_exception(type(e), e, e.__traceback__)

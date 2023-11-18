@@ -423,3 +423,17 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await context.bot.sendMessage(chat_id=update.effective_chat.id, text="需要输入想要搜索的内容"
                                           , reply_to_message_id=update.effective_message.id)
+
+
+async def just_delete_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_user.id == int(config.admin):
+        await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
+        logger.info(f"some one use admin command delete_backup: {update.effective_user.id}")
+        return
+
+    if context.args:
+        await backup.just_delete_backup(context.args[0], context)
+
+    else:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="参数不足")
