@@ -405,9 +405,9 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
                      messages])
 
                 if update.effective_chat.type == "private":
-                    await context.bot.sendMessage(chat_id=update.effective_chat.id, text=send_text, parse_mode="HTML")
+                    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + send_text, parse_mode="HTML")
                 else:
-                    await context.bot.sendMessage(chat_id=update.effective_chat.id, text=send_text, parse_mode="HTML"
+                    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + send_text, parse_mode="HTML"
                                                   , reply_to_message_id=update.effective_message.id)
 
             else:
