@@ -14,7 +14,7 @@ async def ss(context: Message):
             await context.edit(f"sqlite> {context.arguments}")
             await conversation.send_message(f"/sql {context.arguments}")
         else:
-            await context.edit("没有参数")
+            await context.edit("缺少参数")
             return
         try:
             chat_response = await conversation.get_response()
@@ -31,7 +31,7 @@ async def ss(context: Message):
             await context.edit(f"~# {context.arguments}")
             await conversation.send_message(f"/shell {context.arguments}")
         else:
-            await context.edit("没有参数")
+            await context.edit("缺少参数")
             return
         try:
             chat_response = await conversation.get_response()
