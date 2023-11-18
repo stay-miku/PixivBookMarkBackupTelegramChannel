@@ -255,7 +255,7 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 else:
                     logger.info("cannot find illust")
-                    if update.effective_chat.type == "PRIVATE":
+                    if update.effective_chat.type == "private":
                         await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到对应的作品~")
                     else:
                         await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到对应的作品~"
@@ -404,21 +404,21 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     [f"<a href=\"https://t.me/c/{i['channel'][4:]}/{i['message_id']}\">{i['id']}</a>" for i in
                      messages])
 
-                if update.effective_chat.type == "PRIVATE":
+                if update.effective_chat.type == "private":
                     await context.bot.sendMessage(chat_id=update.effective_chat.id, text=send_text, parse_mode="HTML")
                 else:
                     await context.bot.sendMessage(chat_id=update.effective_chat.id, text=send_text, parse_mode="HTML"
                                                   , reply_to_message_id=update.effective_message.id)
 
             else:
-                if update.effective_chat.type == "PRIVATE":
+                if update.effective_chat.type == "private":
                     await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到作品")
                 else:
                     await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到作品"
                                                   , reply_to_message_id=update.effective_message.id)
 
     else:
-        if update.effective_chat.type == "PRIVATE":
+        if update.effective_chat.type == "private":
             await context.bot.sendMessage(chat_id=update.effective_chat.id, text="需要输入想要搜索的内容")
         else:
             await context.bot.sendMessage(chat_id=update.effective_chat.id, text="需要输入想要搜索的内容"
