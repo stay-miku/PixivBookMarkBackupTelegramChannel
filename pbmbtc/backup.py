@@ -51,6 +51,7 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
                                           , pool_timeout=600, read_timeout=600, write_timeout=600
                                           , connect_timeout=600)
             have_sent.append({"message_id": preview_message.message_id, "channel": channel})
+            preview_message = [preview_message]         # 对下面reply_to_message_id=preview_message[0]的兼容
 
         file_message = await retry(context.bot.sendMediaGroup, 5, 0, chat_id=channel, media=send_file,
                                    reply_to_message_id=preview_message[0].message_id

@@ -7,11 +7,14 @@ from pagermaid.enums import Message
 bot_name = "pixivBookmarksBackupBot"
 
 
-@listener(is_plugin=True, command=alias_command("ss"), description="快捷发送涩图,需使用备份bot")
+@listener(is_plugin=True, command=alias_command("ss"), description="快捷发送涩图,需使用备份bot", parameters="<tag>...|过滤作品的tag")
 async def ss(context: Message):
     await context.edit("正在涩涩~")
     async with bot.conversation(bot_name) as conversation:
-        await conversation.send_message("/rand")
+        if context.parameter:
+            await conversation.send_message(f"/rand {context.arguments}")
+        else:
+            await conversation.send_message("/rand")
         try:
             chat_response = await conversation.get_response()
         except Exception:

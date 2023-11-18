@@ -10,7 +10,7 @@ import os
 
 
 database_path = "data/"
-debug = False
+debug = True
 
 if not os.path.exists(database_path):
     os.makedirs(database_path)
