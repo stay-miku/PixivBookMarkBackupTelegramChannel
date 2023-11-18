@@ -231,6 +231,7 @@ async def add_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(update.effective_chat.type)
     try:
         # 有参数
         if context.args:
@@ -410,7 +411,6 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                   , reply_to_message_id=update.effective_message.id)
 
             else:
-                logger.info(update.effective_chat.type)
                 if update.effective_chat.type == "PRIVATE":
                     await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到作品")
                 else:
