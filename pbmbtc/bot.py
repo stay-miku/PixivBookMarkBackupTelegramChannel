@@ -114,15 +114,15 @@ async def run_bot():
 
     await application.bot.set_my_commands([
         BotCommand("start", "开始与帮助"),
-        BotCommand("rand", "随机收藏涩图~,可选tag过滤:/rand tag tag..."),
-        BotCommand("search", "搜索想要的作品,对于纯数字会搜索作品id或者作者id,目前最多提供10条记录"),
+        BotCommand("rand", "随机收藏涩图~,可选tag过滤:/rand tag tag...,范围仅限于备份频道"),
+        BotCommand("search", "搜索想要的作品,对于纯数字会搜索作品id或者作者id,目前最多提供10条记录,范围仅限于备份频道"),
         BotCommand("plugin", "获取快捷rand search的pagermaid插件")
     ], scope=telegram.BotCommandScopeDefault())
 
     await application.bot.set_my_commands([
         BotCommand("start", "开始与帮助"),
-        BotCommand("rand", "随机收藏涩图~,可选tag过滤:/rand tag tag..."),
-        BotCommand("search", "搜索想要的作品,对于纯数字会搜索作品id或者作者id,目前最多提供10条记录"),
+        BotCommand("rand", "随机收藏涩图~,可选tag过滤:/rand tag tag...,范围仅限于备份频道"),
+        BotCommand("search", "搜索想要的作品,对于纯数字会搜索作品id或者作者id,目前最多提供10条记录,范围仅限于备份频道"),
         BotCommand("plugin", "获取快捷rand search的pagermaid插件"),
         BotCommand("admin_plugin", "管理员专用的pagermaid插件"),
         BotCommand("add_backup", "管理员命令,手动补全已失效作品的备份(pbrm联动)"),     # pip install pbrm 本地备份工具

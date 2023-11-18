@@ -20,13 +20,13 @@ logger = logging.getLogger("bot_command")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.sendMessage(chat_id=update.effective_chat.id,
-                                  text="使用/rand获取随机收藏作品\n使用/search搜索想要的作品\n使用/plugin获取适用于pagermaid的快捷插件")
+                                  text="使用/rand获取随机收藏作品\n使用/search搜索想要的作品\n使用/plugin获取适用于pagermaid的快捷插件\n以上搜索和随机范围仅限于备份频道内")
     pass
 
 
 async def reload_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
-        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="你不是管理员")
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command reload_config: {update.effective_user.id}")
         return
     else:
@@ -38,7 +38,7 @@ async def reload_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def stop_update_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command stop_update_task: {update.effective_user.id}")
         return
 
@@ -53,7 +53,7 @@ async def stop_update_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def stop_backup_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command stop_backup_task: {update.effective_user.id}")
         return
 
@@ -68,7 +68,7 @@ async def stop_backup_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start_update_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command start_update_task: {update.effective_user.id}")
         return
 
@@ -81,7 +81,7 @@ async def start_update_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start_async_update_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command start_async_update_task: {update.effective_user.id}")
         return
 
@@ -94,7 +94,7 @@ async def start_async_update_task(update: Update, context: ContextTypes.DEFAULT_
 async def start_backup_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command start_backup_task: {update.effective_user.id}")
         return
 
@@ -107,7 +107,7 @@ async def start_backup_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def force_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command force_update: {update.effective_user.id}")
         return
 
@@ -121,7 +121,7 @@ async def force_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def force_async_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command force_async_update: {update.effective_user.id}")
         return
 
@@ -135,7 +135,7 @@ async def force_async_update(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def force_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command force_backup: {update.effective_user.id}")
         return
 
@@ -150,7 +150,7 @@ async def force_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def sql(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command sql: {update.effective_user.id}")
         return
     sql_str = ' '.join(context.args)
@@ -179,7 +179,7 @@ async def sql(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def shell(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command shell: {update.effective_user.id}")
         return
 
@@ -213,7 +213,7 @@ async def shell(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def add_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command add_backup: {update.effective_user.id}")
         return
 
@@ -293,7 +293,7 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def force_backup_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command force_backup_one: {update.effective_user.id}")
         return
 
@@ -311,7 +311,7 @@ async def force_backup_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def update_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command update_status: {update.effective_user.id}")
         return
 
@@ -326,7 +326,7 @@ async def update_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def backup_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command backup_status: {update.effective_user.id}")
         return
 
@@ -354,7 +354,7 @@ async def plugin_(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def admin_plugin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_user.id == int(config.admin):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
-                                      chat_id=update.effective_chat.id, text="你不是管理员")
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command admin_plugin: {update.effective_user.id}")
         return
 
