@@ -395,7 +395,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if illusts:
                 messages = []
                 for illust in illusts:
-                    query = select(db.PreviewBackup).filter_by(id=illust.id).limit(1)
+                    query = select(db.PreviewBackup).filter_by(id=illust[0].id).limit(1)
                     message_record_result = await session.execute(query)
                     message_reocrd = message_record_result.first()
                     messages.append({"channel": message_reocrd.channel, "message_id": message_reocrd.message_id,
