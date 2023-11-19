@@ -114,7 +114,7 @@ async def async_update_single(illust, update_meta, error_list: List) -> bool:
     try:
         if not await db.verify():
             logger.warning("last task is running, skip the illusts")
-            error_list.append({'id': illust['id'], 'error': "task running error"})
+            error_list.append({'id': illust['id'], 'error': "task running error: database is locked"})
             return False
         illust_id = str(illust['id'])
         user_id = int(illust['userId'])
@@ -242,14 +242,19 @@ async def update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_
     if error_list:
         error_text = "\n".join([f"illust: {i['id']}, error: {i['error']}" for i in error_list])
         logger.info(error_text)
-        await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误, 详情请查看日志")
+        await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误, 详情请查看日志:")
+        if len(error_text) > 4000:
+            await context.bot.sendDocument(chat_id=config.admin, document=error_text.encode("utf-8"), filename="error.log")
+        else:
+            await context.bot.sendMessage(chat_id=config.admin, text=error_text)
     with db.start_session() as session:
         # 删除所有未被更新的作品
-        error_illusts = [i['id'] for i in error_list]
-        unlike = session.query(db.Illust).filter_by(queried=0).filter(db.Illust.id.notin_(error_illusts)).all()
-        for un in unlike:
-            await backup.delete_backup(un.id, session, context)
-        # session.commit()  with内最好别手动commit
+        if config.delete_if_not_like:
+            error_illusts = [i['id'] for i in error_list]
+            unlike = session.query(db.Illust).filter_by(queried=0).filter(db.Illust.id.notin_(error_illusts)).all()
+            for un in unlike:
+                await backup.delete_backup(un.id, session, context)
+            # session.commit()  with内最好别手动commit
 
         session.query(db.Illust).update({"queried": 0})
 
@@ -284,14 +289,19 @@ async def async_update(update_meta: bool, delay: float, context: ContextTypes.DE
     await asyncio.gather(*tasks)
     if error_list:
         error_text = "\n".join([f"illust: {i['id']}, error: {i['error']}" for i in error_list])
-        await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误: \n{error_text}")
+        await context.bot.sendMessage(chat_id=config.admin, text=f"更新列表时部分作品发生错误, 详情请查看日志:")
+        if len(error_text) > 4000:
+            await context.bot.sendDocument(chat_id=config.admin, document=error_text.encode("utf-8"), filename="error.log")
+        else:
+            await context.bot.sendMessage(chat_id=config.admin, text=error_text)
     with db.start_session() as session:
-        # 删除所有未被更新的作品
-        error_illusts = [i['id'] for i in error_list]
-        unlike = session.query(db.Illust).filter_by(queried=0).filter(db.Illust.id.notin_(error_illusts)).all()
-        for un in unlike:
-            await backup.delete_backup(un.id, session, context)
-        # session.commit()  with内最好别手动commit
+        if config.delete_if_not_like:
+            # 删除所有未被更新的作品
+            error_illusts = [i['id'] for i in error_list]
+            unlike = session.query(db.Illust).filter_by(queried=0).filter(db.Illust.id.notin_(error_illusts)).all()
+            for un in unlike:
+                await backup.delete_backup(un.id, session, context)
+            # session.commit()  with内最好别手动commit
 
         session.query(db.Illust).update({"queried": 0})
 

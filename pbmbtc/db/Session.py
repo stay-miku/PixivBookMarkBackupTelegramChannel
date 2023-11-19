@@ -32,6 +32,7 @@ class Bot(Base):
     bookmarks_update_interval = Column(Integer)  # 收藏同步间隔,不能太高,单位为秒,可以bot命令强制更新一次
     backup_interval = Column(Integer)       # 备份操作间隔,可以比收藏同步频率高
     backup_number_ontime = Column(Integer)  # 每次备份操作备份作品数量,不建议太高,尤其刚使用时
+    delete_if_not_like = Column(Integer)    # 是否删除已取消收藏的作品
 
 
 class Illust(Base):

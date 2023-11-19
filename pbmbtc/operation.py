@@ -4,7 +4,7 @@ from . import db
 def init():
     with db.start_session() as session:
         if session.query(db.Bot).first() or session.query(db.Backup).first():
-            print("There is already content in the database. Do you want to continue?(y/N):")
+            print("There is already content in the database. Do you want to continue?(y/N):", end="")
             if not input().lower() == 'y':
                 print("exit.")
                 return
@@ -35,6 +35,12 @@ def init():
         else:
             backup_number_ontime = int(backup_number_ontime)
 
+        delete_if_not_like = input("Whether to delete illusts that have been canceled from bookmarks(y/N):")
+        if delete_if_not_like.lower() == "y":
+            delete_if_not_like = 1
+        else:
+            delete_if_not_like = 0
+
         # config
 
         bot = db.Bot()
@@ -46,6 +52,7 @@ def init():
         bot.backup_interval = backup_interval
         bot.tmp_path = tmp_path
         bot.backup_number_ontime = backup_number_ontime
+        bot.delete_if_not_like = delete_if_not_like
         session.add(bot)
 
     print("Bot setup completed.")

@@ -12,13 +12,15 @@ tmp_path = ""
 bookmarks_update_interval = 0
 backup_interval = 0
 backup_number_ontime = 0
+delete_if_not_like = 0
 
 
 def load_config():
     with db.start_session() as session:
         bot = session.query(db.Bot).first()
 
-        global api_key, admin, cookie, gif_preview, tmp_path, bookmarks_update_interval, backup_interval, backup_number_ontime
+        global api_key, admin, cookie, gif_preview, tmp_path, bookmarks_update_interval, backup_interval
+        global backup_number_ontime, delete_if_not_like
 
         api_key = bot.key
         admin = bot.admin
@@ -28,6 +30,8 @@ def load_config():
         bookmarks_update_interval = bot.bookmarks_update_interval
         backup_interval = bot.backup_interval
         backup_number_ontime = bot.backup_number_ontime
+        delete_if_not_like = bot.delete_if_not_like
+
 
     logger.debug(f"api_key: {api_key}, admin: {admin}")
 
