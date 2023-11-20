@@ -13,6 +13,7 @@ from . import pixiv
 from typing import Dict, List, Union, Tuple
 import traceback
 from sqlalchemy.future import select
+import html
 
 logger = logging.getLogger("backup")
 
@@ -23,9 +24,9 @@ logger = logging.getLogger("backup")
 def get_introduce(illust: db.Illust):
     tags = ' '.join([i.rsplit('=>', 1)[-1] for i in illust.tags.split('\n')])
     ugoira_tip = "\n<i>此作品为动图</i>" if config.gif_preview and illust.type == 2 else ""
-    introduce = f"""Tags: {tags}
-作者: <a href=\"https://www.pixiv.net/users/{illust.user_id}\">{illust.user_name}</a>
-原链接: <a href=\"https://www.pixiv.net/artworks/{illust.id}\">{illust.title}</a>{ugoira_tip}"""
+    introduce = f"""Tags: {html.escape(tags)}
+作者: <a href=\"https://www.pixiv.net/users/{illust.user_id}\">{html.escape(illust.user_name)}</a>
+原链接: <a href=\"https://www.pixiv.net/artworks/{illust.id}\">{html.escape(illust.title)}</a>{ugoira_tip}"""
 
     return introduce
 
