@@ -381,7 +381,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
             result = ""
             for i in illusts_list:
                 channel, message_id = await search_utils.first_preview(i)
-                result += f"<a href=\"https://t.me/c/{channel[4:]}/{message_id}\">{i}</a>"
+                result += f"<a href=\"https://t.me/c/{channel[4:]}/{message_id}\">{i}</a>\n"
 
             if update.effective_chat.type == "private":
                 await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + result, parse_mode="HTML")
