@@ -8,12 +8,18 @@ import random
 
 # is_id作用为是否查询id user_id
 async def random_saved_illsust(tags: List[str], black_list: List[str], limit=1, is_id=False) -> List[str]:
+    # 因为split原因,将['']的tags修正为[]
+    if len(tags) == 1 and tags[0] == "":
+        tags = []
     async with db.start_async_session() as session:
 
         if is_id:
 
             conditions = [not_((db.Illust.title + " " + db.Illust.tags + " " + db.Illust.user_name
                                 + " " + db.Illust.user_account).ilike(f"%{i}%")) for i in black_list]
+
+            [conditions.append((db.Illust.title + " " + db.Illust.tags + " " + db.Illust.user_name
+                                + " " + db.Illust.user_account).ilike(f"%{i}%")) for i in tags[1:]]
 
             query = select(db.Illust).filter(or_(db.Illust.id == tags[0], db.Illust.user_id == tags[0])
                                              ).filter(and_(*conditions)).filter_by(saved=1).order_by(func.random()
