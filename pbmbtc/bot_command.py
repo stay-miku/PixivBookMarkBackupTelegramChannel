@@ -20,7 +20,7 @@ logger = logging.getLogger("bot_command")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.sendMessage(chat_id=update.effective_chat.id,
+    await context.bot.sendMessage(chat_id=update.effective_chat.id, parse_mode='MARKDOWN_V2',
                                   text="""/rand
 随机涩图,范围仅为频道内的内容,支持目标tag过滤和黑名单tag过滤,检索关键字为作品标题、作者名、作者用户名、作品tag.多关键字使用逗号隔开,全角半角逗号均可,用法示例:
 `/rand` 无任何限制随机作品
