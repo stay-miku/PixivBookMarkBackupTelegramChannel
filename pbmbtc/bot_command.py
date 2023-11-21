@@ -14,6 +14,7 @@ import asyncio
 from . import backup
 from sqlalchemy.future import select
 from sqlalchemy import func, and_, or_
+from . import search_utils
 
 logger = logging.getLogger("bot_command")
 
@@ -231,51 +232,40 @@ async def add_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info(update.effective_chat.type)
     try:
-        # 有参数
         if context.args:
-            search_keywords = re.split(r'[,，]', " ".join(context.args))
-            logger.info(f"{update.effective_user.id}:{update.effective_user.username} rand tag: {search_keywords}")
+            a = (" ".join(context.args)).split("|")
+            if len(a) <= 1:
+                tags = re.split(r"[,，]", a[0])
+                black_list = []
 
-            condition = [db.Illust.tags.like(f"%{keyword}%") for keyword in search_keywords]  # 关键词
-            condition.append(db.Illust.saved == 1)  # 需被保存
+            else:
+                tags = re.split(r"[,，]", a[0])
+                black_list = re.split(r"[,，]", a[1])
 
-            async with db.start_async_session() as session:
-                query = select(db.PreviewBackup).join(db.Illust).filter(and_(*condition)).order_by(func.random()).limit(
-                    1)
-                result = await session.execute(query)
-
-                illust = result.first()
-
-                if illust:
-                    logger.info(f"find: {illust[0].id}")
-                    await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=illust[0].channel
-                                                     , message_id=illust[0].message_id)
-
-                else:
-                    logger.info("cannot find illust")
-                    if update.effective_chat.type == "private":
-                        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到对应的作品~")
-                    else:
-                        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到对应的作品~"
-                                                      , reply_to_message_id=update.effective_message.id)
-
-        # 无参数
         else:
-            async with db.start_async_session() as session:
-                query = select(db.PreviewBackup).join(db.Illust).filter_by(saved=1).order_by(func.random()).limit(1)
-                result = await session.execute(query)
+            tags = []
+            black_list = []
 
-                illust = result.first()[0]
+        logger.info(f"rand backup, user: {update.effective_user.id}, username: {update.effective_user.username}, tags: {tags}, black_list: {black_list}")
 
-                await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=illust.channel
-                                                 , message_id=illust.message_id)
-                if update.effective_user.username:
-                    logger.info(
-                        f"rand backup: {illust.id}, user: {update.effective_user.id}, username: {update.effective_user.username}")
-                else:
-                    logger.info(f"rand backup: {illust.id}, user: {update.effective_user.id}")
+        random_illust = await search_utils.random_saved_illsust(tags, black_list)
+
+        if random_illust:
+
+            channel, message_id = await search_utils.random_preview(random_illust[0], 1)
+
+            if channel:
+                await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=channel
+                                                 , message_id=message_id)
+                return
+
+        if update.effective_chat.type == "private":
+            await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到对应的作品~")
+        else:
+            await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到对应的作品~"
+                                          , reply_to_message_id=update.effective_message.id)
+
     except telegram.error.RetryAfter as e:
         # 按理来说出现retry after后下面这个应该执行不了,但是还是先写上好了
         await context.bot.sendMessage(chat_id=update.effective_chat.id
@@ -370,53 +360,41 @@ async def admin_plugin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info(f"search: user: {update.effective_user.id}, name: {update.effective_user.username}, args: {context.args}")
+    logger.info(
+        f"search: user: {update.effective_user.id}, name: {update.effective_user.username}, args: {context.args}")
     if context.args:
+        a = (" ".join(context.args)).split("|")
+        if len(a) <= 1:
+            tags = re.split(r"[,，]", a[0])
+            black_list = []
 
-        try:
-            number = int(" ".join(context.args))
-            search_number = " ".join(context.args)
-            conditions = [db.Illust.id == search_number, db.Illust.user_id == search_number]
-            query = select(db.Illust).filter(or_(*conditions)).filter_by(saved=1).limit(10)
+        else:
+            tags = re.split(r"[,，]", a[0])
+            black_list = re.split(r"[,，]", a[1])
 
-        except ValueError:
-            search_keyword = re.split(r"[,，]", " ".join(context.args))
+        if len(tags) == 1 and tags[0].isdigit():
+            illusts_list = await search_utils.random_saved_illsust(tags, black_list, 10, True)
+        else:
+            illusts_list = await search_utils.random_saved_illsust(tags, black_list, 10)
 
-            conditions = [(db.Illust.title + " " + db.Illust.tags + " " + db.Illust.user_name + " " +
-                           db.Illust.user_account).like(f"%{i}%") for i in search_keyword]
-            conditions.append(db.Illust.saved == 1)
-            query = select(db.Illust).filter(and_(*conditions)).order_by(func.random()).limit(10)
+        if illusts_list:
+            result = ""
+            for i in illusts_list:
+                channel, message_id = await search_utils.first_preview(i)
+                result += f"<a href=\"https://t.me/c/{channel[4:]}/{message_id}\">{i}</a>"
 
-        async with db.start_async_session() as session:
-
-            result = await session.execute(query)
-
-            illusts = result.all()
-
-            if illusts:
-                messages = []
-                for illust in illusts:
-                    query = select(db.PreviewBackup).filter_by(id=illust[0].id).limit(1)
-                    message_record_result = await session.execute(query)
-                    message_reocrd = message_record_result.first()[0]
-                    messages.append({"channel": message_reocrd.channel, "message_id": message_reocrd.message_id,
-                                     "id": message_reocrd.id})
-                send_text = "\n".join(
-                    [f"<a href=\"https://t.me/c/{i['channel'][4:]}/{i['message_id']}\">{i['id']}</a>" for i in
-                     messages])
-
-                if update.effective_chat.type == "private":
-                    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + send_text, parse_mode="HTML")
-                else:
-                    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + send_text, parse_mode="HTML"
-                                                  , reply_to_message_id=update.effective_message.id)
-
+            if update.effective_chat.type == "private":
+                await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + result, parse_mode="HTML")
             else:
-                if update.effective_chat.type == "private":
-                    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到作品")
-                else:
-                    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到作品"
-                                                  , reply_to_message_id=update.effective_message.id)
+                await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + result, parse_mode="HTML"
+                                              , reply_to_message_id=update.effective_message.id)
+
+        else:
+            if update.effective_chat.type == "private":
+                await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到想要的内容")
+            else:
+                await context.bot.sendMessage(chat_id=update.effective_chat.id, text="没有找到想要的内容"
+                                              , reply_to_message_id=update.effective_message.id)
 
     else:
         if update.effective_chat.type == "private":

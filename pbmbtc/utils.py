@@ -60,7 +60,7 @@ def compress_image(image_bytes, try_times=0, max_size=1024*1024*10, max_width_he
         compression_ratio = math.sqrt(max_size / len(image_bytes)) * (0.95 ** try_times)        # 多次尝试后加大缩放比例
     # 图片是否大于最大宽高和                           tg限制
     elif (image.width + image.height) >= max_width_height_sum:
-        compression_ratio = max_width_height_sum / (image.width + image.height) * (0.95 ** try_times)
+        compression_ratio = max_width_height_sum / (image.width + image.height) * (0.98 ** (try_times + 1))
     else:
         logger.debug("don't need compress")
         if not crop:
