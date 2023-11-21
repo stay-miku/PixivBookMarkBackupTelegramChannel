@@ -33,34 +33,34 @@ def get_image_format(byte_data):
 
 
 # 与pixiv/utils里的不一样
-def compress_image(image_bytes, max_size=1024*1024*10):
+def compress_image(image_bytes, try_times=0, max_size=1024*1024*10, max_width_height_sum=10000):
     logger.debug(f"compress image: max_size: {max_size}")
     image = Image.open(io.BytesIO(image_bytes))
 
     image_format = get_image_format(image_bytes)
 
-    # 对于图像宽高比例超过1:10或10:1的处理            tg限制
+    # 对于图像宽高比例超过1:20或20:1的处理            tg限制
     width, height = image.width, image.height
     crop = False
-    if width / height >= 10:
+    if width / height >= 20:
         logger.debug(f"compress image: crop: width: {width}, height: {height}")
-        crop_width = 9 * height
+        crop_width = 19 * height
         left = (width - crop_width) / 2
         image = image.crop((int(left), 0, int(left + crop_width), height))
         crop = True
-    elif height / width >= 10:
+    elif height / width >= 20:
         logger.debug(f"compress image: crop: width: {width}, height: {height}")
-        crop_height = 9 * width
+        crop_height = 19 * width
         upper = (height - crop_height) / 2
         image = image.crop((0, int(upper), width, int(upper + crop_height)))
         crop = True
 
     # 图片是否大于最大大小                            tg限制
     if len(image_bytes) >= max_size:
-        compression_ratio = math.sqrt(max_size / len(image_bytes)) * 0.95
+        compression_ratio = math.sqrt(max_size / len(image_bytes)) * (0.95 ** try_times)        # 多次尝试后加大缩放比例
     # 图片是否大于最大宽高和                           tg限制
-    elif (image.width + image.height) >= 10000:
-        compression_ratio = 10000 / (image.width + image.height)
+    elif (image.width + image.height) >= max_width_height_sum:
+        compression_ratio = max_width_height_sum / (image.width + image.height) * (0.95 ** try_times)
     else:
         logger.debug("don't need compress")
         if not crop:
@@ -84,14 +84,16 @@ def compress_image(image_bytes, max_size=1024*1024*10):
     logger.debug(f"compress image: new image size: {len(compressed_bytes)}")
 
     # 防止一次压缩无法满足限制(当然一般情况没问题)
-    return compressed_bytes, len(compressed_bytes) >= max_size or resized_image.height + resized_image.width >= 10000
+    return compressed_bytes, len(compressed_bytes) >= max_size or resized_image.height + resized_image.width >= max_width_height_sum
 
 
-def compress_image_if_needed(image_bytes, max_size=1024*1024*10):
+def compress_image_if_needed(image_bytes, max_size=1024*1024*10, max_width_height_sum=10000):
     result = True
+    i = 0
     while result:
         logger.debug("compress if need")
-        image_bytes, result = compress_image(image_bytes, max_size)
+        image_bytes, result = compress_image(image_bytes, i, max_size, max_width_height_sum)
+        i += 1
 
     return image_bytes
 
