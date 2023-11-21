@@ -232,6 +232,8 @@ async def add_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        f"search: user: {update.effective_user.id}, name: {update.effective_user.username}, args: {context.args}")
     try:
         if context.args:
             a = (" ".join(context.args)).split("|")
@@ -246,8 +248,6 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             tags = []
             black_list = []
-
-        logger.info(f"rand backup, user: {update.effective_user.id}, username: {update.effective_user.username}, tags: {tags}, black_list: {black_list}")
 
         random_illust = await search_utils.random_saved_illsust(tags, black_list)
 
