@@ -8,12 +8,16 @@ import random
 
 # is_id作用为是否查询id user_id
 async def random_saved_illsust(tags: List[str], black_list: List[str], limit=1, is_id=False) -> List[str]:
-
-    async with (db.start_async_session() as session):
+    async with db.start_async_session() as session:
 
         if is_id:
+
+            conditions = [not_((db.Illust.title + " " + db.Illust.tags + " " + db.Illust.user_name
+                                + " " + db.Illust.user_account).ilike(f"%{i}%")) for i in black_list]
+
             query = select(db.Illust).filter(or_(db.Illust.id == tags[0], db.Illust.user_id == tags[0])
-                                             ).filter_by(saved=1).order_by(func.random()).limit(limit)
+                                             ).filter(and_(*conditions)).filter_by(saved=1).order_by(func.random()
+                                                                                                     ).limit(limit)
 
         else:
             conditions = []
@@ -44,7 +48,6 @@ async def random_saved_illsust(tags: List[str], black_list: List[str], limit=1, 
 
 # 这里的limit是倒数几个不要作为结果
 async def random_preview(illust_id, limit: int):
-
     async with db.start_async_session() as session:
 
         query = select(db.PreviewBackup).filter_by(id=illust_id)
@@ -70,7 +73,6 @@ async def random_preview(illust_id, limit: int):
 
 
 async def first_preview(illust_id):
-
     async with db.start_async_session() as session:
         query = select(db.PreviewBackup).filter_by(id=illust_id).limit(1)
 
@@ -83,6 +85,3 @@ async def first_preview(illust_id):
 
         else:
             return None, None
-
-
-
