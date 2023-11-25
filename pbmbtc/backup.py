@@ -191,7 +191,7 @@ async def send_unavailable(illust: db.Illust, context: ContextTypes.DEFAULT_TYPE
 async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT_TYPE):
     if not await db.verify():
         logger.warning("last task is running, skip")
-        await context.bot.sendMessage(chat_id=config.admin, text="数据库被锁定,更新备份跳过")
+        await retry(context.bot.sendMessage, 5, 0, chat_id=config.admin, text="数据库被锁定,更新备份跳过")
         return
     have_sent: List[Message] = []
     error_illust_id = "0"
@@ -246,6 +246,7 @@ async def send_backup_from_file(illust_id: str, file_path: str, context: Context
     error_illust_id = "0"
     if not os.path.exists(os.path.join(file_path, "meta.json")):
         await context.bot.sendMessage(chat_id=config.admin, text="错误的路径")
+        return
     try:
         with db.start_session() as session:
             illust = session.query(db.Illust).filter_by(id=illust_id).first()
