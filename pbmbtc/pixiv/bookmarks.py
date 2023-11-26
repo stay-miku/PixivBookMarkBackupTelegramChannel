@@ -2,6 +2,7 @@
 import httpx
 import json
 import logging
+from pbmbtc.utils import retry
 
 logger = logging.getLogger("bookmarks")
 logger.setLevel(logging.DEBUG)
@@ -37,9 +38,9 @@ async def get_bookmarks(cookie: str, user: str):
     while 1:
         logger.debug(f"page: {page}")
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://www.pixiv.net/ajax/user/{}/illusts/bookmarks?tag=&offset={}&limit={}&rest=show"
-                .format(user, str((page - 1) * one_page_count), str(one_page_count)), headers=header)
+            response = await retry(client.get, 5, 0,
+                                   url="https://www.pixiv.net/ajax/user/{}/illusts/bookmarks?tag=&offset={}&limit={}&rest=show"
+                                   .format(user, str((page - 1) * one_page_count), str(one_page_count)), headers=header)
         if response.status_code != 200:
             raise Exception(f"Get bookmarks: Error status code: {response.status_code}")
         json_data = json.loads(response.content.decode("utf-8"))
