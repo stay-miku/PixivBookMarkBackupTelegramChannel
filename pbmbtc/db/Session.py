@@ -33,6 +33,13 @@ class Bot(Base):
     backup_interval = Column(Integer)       # 备份操作间隔,可以比收藏同步频率高
     backup_number_ontime = Column(Integer)  # 每次备份操作备份作品数量,不建议太高,尤其刚使用时
     delete_if_not_like = Column(Integer)    # 是否删除已取消收藏的作品
+    db_backup_option = Column(String)       # 数据库备份选项,shell 使用shell命令备份, path 复制到新路径, post 通过post请求备份
+    db_backup_path = Column(String)         # 数据库path备份路径
+    db_backup_post_url = Column(String)     # 数据库post备份url
+    db_backup_post_header = Column(String)  # 数据库post备份header,json格式
+    db_backup_post_data = Column(String)    # 数据库post备份post所使用的data,json格式,其中value为{file}的字段会被替换为数据库二进制文件
+    db_backup_shell_command = Column(String)    # 数据库shell备份shell命令
+    db_backup_interval = Column(Integer)    # 数据库备份间隔,单位为秒
 
 
 class Illust(Base):

@@ -15,6 +15,7 @@ from . import backup
 from sqlalchemy.future import select
 from sqlalchemy import func, and_, or_
 from . import search_utils
+from . import database_backup
 
 logger = logging.getLogger("bot_command")
 
@@ -430,3 +431,47 @@ async def just_delete_backup(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await context.bot.sendMessage(chat_id=update.effective_chat.id, text="删除成功")
     else:
         await context.bot.sendMessage(chat_id=update.effective_chat.id, text="参数不足")
+
+
+async def backup_database(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_user.id == int(config.admin):
+        await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
+        logger.info(f"some one use admin command start_database_backup: {update.effective_user.id}")
+        return
+
+    try:
+        await database_backup.start_backup(context)
+        logger.info("force db backup completed")
+    except Exception as e:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text=f"备份发生错误: {e}")
+        traceback.print_exception(type(e), e, e.__traceback__)
+        return
+
+
+async def start_db_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_user.id == int(config.admin):
+        await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
+        logger.info(f"some one use admin command start_database_backup_task: {update.effective_user.id}")
+        return
+
+    context.job_queue.run_repeating(database_backup.start_backup, interval=config.db_backup_interval, name="db_backup_task"
+                                    , first=config.backup_interval)
+    logger.info("start db backup task")
+
+    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
+
+
+async def stop_db_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_user.id == int(config.admin):
+        await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
+                                      chat_id=update.effective_chat.id, text="你不是bot管理员")
+        logger.info(f"some one use admin command stop_database_backup_task: {update.effective_user.id}")
+        return
+
+    task = context.job_queue.get_jobs_by_name("db_backup_task")
+    for job in task:
+        job.schedule_removal()
+    logger.info("delete task")
+    await context.bot.sendMessage(chat_id=update.effective_chat.id, text="操作成功")
