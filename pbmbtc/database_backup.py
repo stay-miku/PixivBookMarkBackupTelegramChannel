@@ -1,3 +1,5 @@
+import datetime
+import os
 import traceback
 import db
 import asyncio
@@ -19,7 +21,8 @@ async def start_backup(context: ContextTypes.DEFAULT_TYPE):
         if config.db_backup_option == "shell":
             await backup_in_shell(config.db_backup_shell_command)
         elif config.db_backup_option == "path":
-            await backup_to_new_path(config.db_backup_path)
+            # 将数据库文件命名为原名+格式化时间然后再复制到新路径
+            await backup_to_new_path(os.path.join(config.db_backup_path, f"{os.path.basename(db.database_path).split('.')[0]}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.db"))
         elif config.db_backup_option == "post":
             await backup_by_post(config.db_backup_post_url, config.db_backup_post_header, config.db_backup_post_data)
         logger.info("backup db success")
