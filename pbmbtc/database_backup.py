@@ -5,8 +5,8 @@ from . import db
 import asyncio
 import aiofiles
 from telegram.ext import ContextTypes
-import lock
-import config
+from . import lock
+from . import config
 import logging
 
 logger = logging.getLogger("database_backup")
