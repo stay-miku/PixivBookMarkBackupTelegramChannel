@@ -1,7 +1,7 @@
 import datetime
 import os
 import traceback
-import db
+from . import db
 import asyncio
 import aiofiles
 from telegram.ext import ContextTypes
