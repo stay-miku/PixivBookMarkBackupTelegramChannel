@@ -20,7 +20,7 @@ async def ss(context: Message):
         except Exception:
             return await context.edit("没有找到涩图!!")
         await conversation.mark_as_read()
-        await chat_response.forward(chat_id=context.chat.id)
+        await chat_response.copy(chat_id=context.chat.id)
         await context.safe_delete()
 
 

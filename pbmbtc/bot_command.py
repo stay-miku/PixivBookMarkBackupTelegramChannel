@@ -274,9 +274,9 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=channel
                 #                                  , message_id=message_id)
                 keyboard = [
-                    [telegram.InlineKeyboardButton("origin", url=f"https://www.pixiv.net/artworks/{random_illust[0]}")],
-                    [telegram.InlineKeyboardButton("author", url=f"https://www.pixiv.net/users/{user_id}")],
-                    [telegram.InlineKeyboardButton("channel", url=f"https://t.me/c/{channel[4:]}/{message_id}")]
+                    [telegram.InlineKeyboardButton("origin", url=f"https://www.pixiv.net/artworks/{random_illust[0]}"),
+                     telegram.InlineKeyboardButton("author", url=f"https://www.pixiv.net/users/{user_id}"),
+                     telegram.InlineKeyboardButton("channel", url=f"https://t.me/c/{channel[4:]}/{message_id}")]
                 ]
                 await context.bot.copyMessage(chat_id=update.effective_chat.id, from_chat_id=channel
                                               , message_id=message_id, caption=f"{user_name} - {title}",
@@ -407,9 +407,11 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 result += f"<a href=\"https://t.me/c/{channel[4:]}/{message_id}\">{i}</a>\n"
 
             if update.effective_chat.type == "private":
-                await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + result, parse_mode="HTML")
+                await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + result,
+                                              parse_mode="HTML")
             else:
-                await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + result, parse_mode="HTML"
+                await context.bot.sendMessage(chat_id=update.effective_chat.id, text="搜索结果:\n" + result,
+                                              parse_mode="HTML"
                                               , reply_to_message_id=update.effective_message.id)
 
         else:
@@ -465,7 +467,8 @@ async def start_db_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"some one use admin command start_database_backup_task: {update.effective_user.id}")
         return
 
-    context.job_queue.run_repeating(database_backup.start_backup, interval=config.db_backup_interval, name="db_backup_task"
+    context.job_queue.run_repeating(database_backup.start_backup, interval=config.db_backup_interval,
+                                    name="db_backup_task"
                                     , first=config.backup_interval)
     logger.info("start db backup task")
 
