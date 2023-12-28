@@ -259,8 +259,12 @@ async def update(update_meta: bool, delay: float, context: ContextTypes.DEFAULT_
 
         session.query(db.Illust).update({"queried": 0})
 
+    if not await db.drop_test():
+        await context.bot.sendMessage(chat_id=config.admin, text="删除测试数据失败")
+
     end_time = time.time()
     logger.info(f"completed update, exc time: {end_time - start_time} sec")
+    return end_time - start_time
 
 
 # 区别在于更新单个作品时是协程并发还是await单线程的
@@ -311,6 +315,7 @@ async def async_update(update_meta: bool, delay: float, context: ContextTypes.DE
 
     end_time = time.time()
     logger.info(f"completed update, exc time: {end_time - start_time} sec")
+    return end_time - start_time
 
 
 async def asyncUpdateTask(context: ContextTypes.DEFAULT_TYPE):
@@ -319,7 +324,8 @@ async def asyncUpdateTask(context: ContextTypes.DEFAULT_TYPE):
     lock.lock()
     try:
         # await update(False, 1, context) #?我什么时候把这delay设为1了,难怪这么慢
-        await async_update(False, 1, context)     # 不能设为0,第一次运行直接把号跑ban掉
+        usage_time = await async_update(False, 1, context)     # 不能设为0,第一次运行直接把号跑ban掉
+        await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表成功, 用时: {usage_time} 秒")
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"Update error: {e}")
@@ -330,7 +336,7 @@ async def asyncUpdateTask(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
 
     logger.info("update task completed")
-    await context.bot.sendMessage(chat_id=config.admin, text="更新收藏列表成功")
+    # await context.bot.sendMessage(chat_id=config.admin, text="更新收藏列表成功")
 
     lock.unlock()
 
@@ -340,8 +346,9 @@ async def updateTask(context: ContextTypes.DEFAULT_TYPE):
         await asyncio.sleep(0.1)
     lock.lock()
     try:
-        await update(False, 1, context)     # ?我什么时候把这delay设为1了,难怪这么慢xx事实证明必须得设1,或者至少要个数,不然就被ban
+        usage_time = await update(False, 1, context)     # ?我什么时候把这delay设为1了,难怪这么慢xx事实证明必须得设1,或者至少要个数,不然就被ban
         # await async_update(False, 0, context)
+        await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表成功, 用时: {usage_time} 秒")
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
         logger.error(f"Update error: {e}")
@@ -352,7 +359,7 @@ async def updateTask(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.sendMessage(chat_id=config.admin, text=f"更新收藏列表发送错误: {e}, 详情查看后台日志")
 
     logger.info("update task completed")
-    await context.bot.sendMessage(chat_id=config.admin, text="更新收藏列表成功")
+    # await context.bot.sendMessage(chat_id=config.admin, text="更新收藏列表成功")
 
     lock.unlock()
 
