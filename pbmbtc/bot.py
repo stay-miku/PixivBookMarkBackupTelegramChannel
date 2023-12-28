@@ -98,7 +98,7 @@ async def run_bot():
     application.add_handler(CommandHandler("admin_plugin", bot_command.admin_plugin))
     application.add_handler(CommandHandler("search", bot_command.search))
     application.add_handler(CommandHandler("just_delete_backup", bot_command.just_delete_backup))
-    application.add_handler(CommandHandler("start_database_backup", bot_command.backup_database))
+    application.add_handler(CommandHandler("force_database_backup", bot_command.backup_database))
     application.add_handler(CommandHandler("start_database_backup_task", bot_command.start_db_backup))
     application.add_handler(CommandHandler("stop_database_backup_task", bot_command.stop_db_backup))
     application.add_handler(CommandHandler("sese", bot_command.rand))
@@ -126,7 +126,8 @@ async def run_bot():
 
     await application.bot.set_my_commands([
         BotCommand("start", "开始与帮助"),
-        BotCommand("rand", "随机收藏涩图~,可选tag过滤:/rand tag tag...,范围仅限于备份频道"),
+        BotCommand("sese", "随机收藏涩图~,可选tag过滤:/rand tag tag...,范围仅限于备份频道"),
+        # BotCommand("rand", "随机收藏涩图~,可选tag过滤:/rand tag tag...,范围仅限于备份频道"),
         BotCommand("search", "搜索想要的作品,对于纯数字会搜索作品id或者作者id,目前最多提供10条记录,范围仅限于备份频道"),
         BotCommand("plugin", "获取快捷rand search的pagermaid插件"),
         BotCommand("admin_plugin", "管理员专用的pagermaid插件"),
@@ -145,7 +146,7 @@ async def run_bot():
         BotCommand("force_update", "管理员命令,强制启动一次更新收藏列表操作"),
         BotCommand("force_backup", "管理员命令,强制启动一次备份操作"),
         BotCommand("force_backup_one", "管理员命令,强制更新指定作品"),
-        BotCommand("start_database_backup", "管理员命令,备份数据库"),
+        BotCommand("force_database_backup", "管理员命令,备份数据库"),
         BotCommand("start_database_backup_task", "管理员命令,开始数据库备份后台任务"),
         BotCommand("stop_database_backup_task", "管理员命令,停止数据库备份后台任务"),
         BotCommand("stop_bot", "管理员命令,停止bot")

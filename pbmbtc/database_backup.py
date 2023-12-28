@@ -14,20 +14,29 @@ logger.setLevel(logging.DEBUG)
 
 
 async def start_backup(context: ContextTypes.DEFAULT_TYPE):
+
+    asyncio.create_task(start_backup_task(context))
+
+
+async def start_backup_task(context: ContextTypes.DEFAULT_TYPE):
     while lock.isLock:
         await asyncio.sleep(0.1)
     lock.lock()
     try:
         if config.db_backup_option == "shell":
             stdout = await backup_in_shell(config.db_backup_shell_command)
-            await context.bot.sendMessage(chat_id=config.admin, text=f"stdout: {stdout}")
+
+            # if len(stdout) < 4000:
+            #     await context.bot.sendMessage(chat_id=config.admin, text=f"stdout: {stdout}")
+            # else:
+            #     await context.bot.sendDocument(chat_id=config.admin, document=stdout, filename="info.log")
         elif config.db_backup_option == "path":
             # 将数据库文件命名为原名+格式化时间然后再复制到新路径
             await backup_to_new_path(os.path.join(config.db_backup_path, f"{db.database_file_name.split('.')[0]}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.db"))
         elif config.db_backup_option == "post":
             await backup_by_post(config.db_backup_post_url, config.db_backup_post_header, config.db_backup_post_data)
         logger.info("backup db success")
-        await context.bot.sendMessage(chat_id=config.admin, text="备份成功")
+        # await context.bot.sendMessage(chat_id=config.admin, text="备份成功")
     except Exception as e:
         if len(str(e)) < 4000:
             await context.bot.sendMessage(chat_id=config.admin, text=f"备份发生错误: {e}")
