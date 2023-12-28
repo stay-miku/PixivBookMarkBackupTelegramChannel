@@ -78,6 +78,21 @@ async def random_preview(illust_id, limit: int):
             return None, None
 
 
+async def get_illust_info(illust_id):
+    async with db.start_async_session() as session:
+        query = select(db.Illust).filter_by(id=illust_id)
+
+        result_object = await session.execute(query)
+
+        result = result_object.scalar()
+
+        if result:
+            return result.user_id, result.user_name, result.title
+
+        else:
+            return None, None, None
+
+
 async def first_preview(illust_id):
     async with db.start_async_session() as session:
         query = select(db.PreviewBackup).filter_by(id=illust_id).limit(1)

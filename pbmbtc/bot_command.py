@@ -268,10 +268,19 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if random_illust:
 
             channel, message_id = await search_utils.random_preview(random_illust[0], 1)
+            user_id, user_name, title = await search_utils.get_illust_info(random_illust[0])
 
             if channel:
-                await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=channel
-                                                 , message_id=message_id)
+                # await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=channel
+                #                                  , message_id=message_id)
+                keyboard = [
+                    [telegram.InlineKeyboardButton("origin", url=f"https://www.pixiv.net/artworks/{random_illust[0]}")],
+                    [telegram.InlineKeyboardButton("author", url=f"https://www.pixiv.net/users/{user_id}")],
+                    [telegram.InlineKeyboardButton("channel", url=f"https://t.me/c/{channel[4:]}/{message_id}")]
+                ]
+                await context.bot.copyMessage(chat_id=update.effective_chat.id, from_chat_id=channel
+                                              , message_id=message_id, caption=f"{user_name} - {title}",
+                                              reply_markup=telegram.InlineKeyboardMarkup(keyboard))
                 return
 
         if update.effective_chat.type == "private":

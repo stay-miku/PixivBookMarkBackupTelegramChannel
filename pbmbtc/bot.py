@@ -100,6 +100,7 @@ async def run_bot():
     application.add_handler(CommandHandler("just_delete_backup", bot_command.just_delete_backup))
     application.add_handler(CommandHandler("start_database_backup", bot_command.backup_database))
     application.add_handler(CommandHandler("start_database_backup_task", bot_command.start_db_backup))
+    application.add_handler(CommandHandler("sese", bot_command.rand))
 
 
     # 开始运行bot
@@ -117,7 +118,7 @@ async def run_bot():
 
     await application.bot.set_my_commands([
         BotCommand("start", "开始与帮助"),
-        BotCommand("rand", "随机收藏涩图~,可选tag过滤:/rand tag tag...,范围仅限于备份频道"),
+        BotCommand("sese", "随机收藏涩图~,可选tag过滤:/rand tag tag...,范围仅限于备份频道"),
         BotCommand("search", "搜索想要的作品,对于纯数字会搜索作品id或者作者id,目前最多提供10条记录,范围仅限于备份频道"),
         BotCommand("plugin", "获取快捷rand search的pagermaid插件")
     ], scope=telegram.BotCommandScopeDefault())
