@@ -10,6 +10,7 @@ import os
 
 
 database_path = "data/"
+database_file_name = "data.db"
 debug = False
 
 if not os.path.exists(database_path):
@@ -105,8 +106,8 @@ class Test(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
 
-engine = create_engine(f"sqlite:///{database_path}data.db", echo=debug)
-engine_asyncio = create_async_engine(f"sqlite+aiosqlite:///{database_path}data.db", echo=debug)
+engine = create_engine(f"sqlite:///{os.path.join(database_path, database_file_name)}", echo=debug)
+engine_asyncio = create_async_engine(f"sqlite+aiosqlite:///{os.path.join(database_path, database_file_name)}", echo=debug)
 
 Base.metadata.create_all(engine)
 

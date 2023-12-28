@@ -1,4 +1,4 @@
-from .Session import start_session, Bot, Illust, Channel, Backup, PreviewBackup, start_async_session, database_path
+from .Session import start_session, Bot, Illust, Channel, Backup, PreviewBackup, start_async_session, database_path, database_file_name
 import asyncio
 
 
