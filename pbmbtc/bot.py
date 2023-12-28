@@ -100,6 +100,7 @@ async def run_bot():
     application.add_handler(CommandHandler("just_delete_backup", bot_command.just_delete_backup))
     application.add_handler(CommandHandler("start_database_backup", bot_command.backup_database))
     application.add_handler(CommandHandler("start_database_backup_task", bot_command.start_db_backup))
+    application.add_handler(CommandHandler("stop_database_backup_task", bot_command.stop_db_backup))
     application.add_handler(CommandHandler("sese", bot_command.rand))
 
 
@@ -145,6 +146,8 @@ async def run_bot():
         BotCommand("force_backup", "管理员命令,强制启动一次备份操作"),
         BotCommand("force_backup_one", "管理员命令,强制更新指定作品"),
         BotCommand("start_database_backup", "管理员命令,备份数据库"),
+        BotCommand("start_database_backup_task", "管理员命令,开始数据库备份后台任务"),
+        BotCommand("stop_database_backup_task", "管理员命令,停止数据库备份后台任务"),
         BotCommand("stop_bot", "管理员命令,停止bot")
     ], scope=telegram.BotCommandScopeAllPrivateChats())
 
