@@ -19,7 +19,8 @@ async def start_backup(context: ContextTypes.DEFAULT_TYPE):
     lock.lock()
     try:
         if config.db_backup_option == "shell":
-            await backup_in_shell(config.db_backup_shell_command)
+            stdout = await backup_in_shell(config.db_backup_shell_command)
+            await context.bot.sendMessage(chat_id=config.admin, text=f"stdout: {stdout}")
         elif config.db_backup_option == "path":
             # 将数据库文件命名为原名+格式化时间然后再复制到新路径
             await backup_to_new_path(os.path.join(config.db_backup_path, f"{db.database_file_name.split('.')[0]}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.db"))
@@ -45,9 +46,12 @@ async def backup_in_shell(shell_command):
     new_db_name = f"{db_name.split('.')[0]}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.db"
 
     shell_command = shell_command.replace("{db_path}", old_db_full_path).replace("{new_name}", new_db_name)
+    logger.info(f"shell command: {shell_command}")
 
     process = await asyncio.create_subprocess_shell(shell_command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, shell=True)
     stdout, stderr = await process.communicate()
+
+    logger.info(f"stdout: {stdout.decode('utf-8')}\n--------------------------\nstderr: {stderr.decode('utf-8')}")
     if process.returncode != 0:
         raise Exception(f"stdout: {stdout.decode('utf-8')}\n--------------------------\nstderr: {stderr.decode('utf-8')}")
     else:
