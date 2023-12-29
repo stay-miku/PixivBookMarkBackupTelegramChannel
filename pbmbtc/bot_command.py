@@ -86,6 +86,11 @@ async def start_update_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"some one use admin command start_update_task: {update.effective_user.id}")
         return
 
+    task = context.job_queue.get_jobs_by_name("bookmarks_task")
+    if task:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="任务已存在")
+        return
+
     context.job_queue.run_repeating(update_bookmarks_record.update_task, interval=config.bookmarks_update_interval
                                     , name="bookmarks_task", first=config.bookmarks_update_interval)
 
@@ -99,6 +104,11 @@ async def start_async_update_task(update: Update, context: ContextTypes.DEFAULT_
         logger.info(f"some one use admin command start_async_update_task: {update.effective_user.id}")
         return
 
+    task = context.job_queue.get_jobs_by_name("bookmarks_task")
+    if task:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="任务已存在")
+        return
+
     context.job_queue.run_repeating(update_bookmarks_record.async_update_task, interval=config.bookmarks_update_interval
                                     , name="bookmarks_task", first=config.bookmarks_update_interval)
 
@@ -110,6 +120,11 @@ async def start_backup_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
                                       chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command start_backup_task: {update.effective_user.id}")
+        return
+
+    task = context.job_queue.get_jobs_by_name("backup_task")
+    if task:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="任务已存在")
         return
 
     context.job_queue.run_repeating(update_illust.update_backup, interval=config.backup_interval, name="backup_task"
@@ -464,6 +479,11 @@ async def start_db_backup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.sendMessage(reply_to_message_id=update.effective_message.message_id,
                                       chat_id=update.effective_chat.id, text="你不是bot管理员")
         logger.info(f"some one use admin command start_database_backup_task: {update.effective_user.id}")
+        return
+
+    task = context.job_queue.get_jobs_by_name("db_backup_task")
+    if task:
+        await context.bot.sendMessage(chat_id=update.effective_chat.id, text="任务已存在")
         return
 
     context.job_queue.run_repeating(database_backup.start_backup, interval=config.db_backup_interval,
