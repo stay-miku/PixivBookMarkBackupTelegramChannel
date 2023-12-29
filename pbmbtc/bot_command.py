@@ -24,19 +24,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.sendMessage(chat_id=update.effective_chat.id, parse_mode='MarkdownV2',
                                   text="""pixiv收藏管理bot
 命令指南:
-/rand
+/sese
 随机涩图,范围仅为频道内的内容,支持目标tag过滤和黑名单tag过滤,检索关键字为作品标题、作者名、作者用户名、作品tag,多关键字使用逗号隔开,全角半角逗号均可,用法示例:
-`/rand` 无任何限制随机作品
-`/rand 萝莉` 随机包含'萝莉'关键字的作品
-`/rand 萝莉，双马尾，兽耳` 随机包含'萝莉''双马尾''兽耳'的作品
-`/rand 萝莉|R\-18` 随机包含'萝莉'且不包含'R\-18'关键字的作品\(注:关键字大小写不敏感\)
-`/rand |R\-18` 随机不包含'R\-18'的作品
+`/sese` 无任何限制随机作品
+`/sese 萝莉` 随机包含'萝莉'关键字的作品
+`/sese 萝莉，双马尾，兽耳` 随机包含'萝莉''双马尾''兽耳'的作品
+`/sese 萝莉|R\-18` 随机包含'萝莉'且不包含'R\-18'关键字的作品\(注:关键字大小写不敏感\)
+`/sese |R\-18` 随机不包含'R\-18'的作品
 /search
-搜索涩图,范围仅为频道内的内容,也支持tag和黑名单tag过滤,用法与/rand类似,区别在于返回的是消息链接,且最多包含10条,也是随机,与/rand不同的是可以按作品id或作者id搜索,用法:
+搜索涩图,范围仅为频道内的内容,也支持tag和黑名单tag过滤,用法与/sese类似,区别在于返回的是消息链接,且最多包含10条,也是随机,与/sese不同的是可以按作品id或作者id搜索,用法:
 `/search 111111|R\-18` 搜索作品id或作者id为111111且不包含'R\-18'关键字的作品
 `/search 111111，兽耳|R\-18` 搜索作品id或者作者id为111111且包含'兽耳'不包含'R\-18'标签的作品
 如果想要按id搜索,则id必须是tag的第一个,如`/search 兽耳，111111`不会搜索id为111111的作品""")
-    pass
 
 
 async def reload_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
