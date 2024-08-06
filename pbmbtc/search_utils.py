@@ -11,6 +11,11 @@ async def random_saved_illsust(tags: List[str], black_list: List[str], limit=1, 
     # 因为split原因,将['']的tags修正为[]
     if len(tags) == 1 and tags[0] == "":
         tags = []
+
+    # r-18g tag需要显式提供,否则默认不包含
+    if 'r-18g' not in [i.lower() for i in tags]:
+        black_list.append("r-18g")
+
     async with db.start_async_session() as session:
 
         if is_id:
