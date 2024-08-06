@@ -24,9 +24,10 @@ logger = logging.getLogger("backup")
 def get_introduce(illust: db.Illust):
     tags = ' '.join([i.rsplit('=>', 1)[-1] for i in illust.tags.split('\n')])
     ugoira_tip = "\n<i>此作品为动图</i>" if config.gif_preview and illust.type == 2 else ""
+    r18g_tip = "\n<b>R-18G警告</b>" if 'r-18g'.lower() in [i.lower() for i in illust.tags] else ""
     introduce = f"""Tags: {html.escape(tags)}
 作者: <a href=\"https://www.pixiv.net/users/{illust.user_id}\">{html.escape(illust.user_name)}</a>
-原链接: <a href=\"https://www.pixiv.net/artworks/{illust.id}\">{html.escape(illust.title)}</a>{ugoira_tip}"""
+原链接: <a href=\"https://www.pixiv.net/artworks/{illust.id}\">{html.escape(illust.title)}</a>{ugoira_tip}{r18g_tip}"""
 
     return introduce
 
