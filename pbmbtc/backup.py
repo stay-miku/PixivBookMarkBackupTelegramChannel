@@ -33,9 +33,10 @@ def get_introduce(illust: db.Illust):
     return introduce
 
 
+# multi_send_file 为多个文件的情况, send_file为None, 为动图
 async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE,
-                      send_preview: Union[List, bytes], send_file: List, introduce, is_ugoira, have_sent: List,
-                      spoiler=False, thumbnail=None):
+                      send_preview: Union[List, bytes], send_file: Union[List, None], introduce, is_ugoira, have_sent: List,
+                      spoiler=False, thumbnail=None, multi_send_file=None):
     channels = config.get_channel_id()
 
     for channel in channels:
@@ -56,10 +57,20 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
             have_sent.append({"message_id": preview_message.message_id, "channel": channel})
             preview_message = [preview_message]  # 对下面reply_to_message_id=preview_message[0]的兼容
 
-        file_message = await retry(context.bot.sendMediaGroup, 5, 0, chat_id=channel, media=send_file,
-                                   reply_to_message_id=preview_message[0].message_id
-                                   , pool_timeout=600, read_timeout=600, write_timeout=600
-                                   , connect_timeout=600)
+        if send_file:
+            file_message = await retry(context.bot.sendMediaGroup, 5, 0, chat_id=channel, media=send_file,
+                                       reply_to_message_id=preview_message[0].message_id
+                                       , pool_timeout=600, read_timeout=600, write_timeout=600
+                                       , connect_timeout=600)
+        elif multi_send_file:
+            file_message = []
+            for i in multi_send_file:
+                file_message += await retry(context.bot.sendMediaGroup, 5, 0, chat_id=channel, media=i,
+                                            reply_to_message_id=preview_message[0].message_id
+                                            , pool_timeout=600, read_timeout=600, write_timeout=600
+                                            , connect_timeout=600)
+        else:
+            raise ValueError("no file to send")
         have_sent += [{"message_id": i.message_id, "channel": channel} for i in file_message]
 
         for i in range(len(preview_message)):
@@ -144,9 +155,17 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
     spoiler = 'R-18' in illust.tags
 
     introduce = get_introduce(illust)
-    send_file = [InputMediaDocument(i, filename=j) for i, j in zip(segments, segments_name)]
-    send_file.append(InputMediaDocument(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8'),
-                                        filename=f"{ugoira_file_name.split('.', 1)[0]}_meta.txt"))
+    # send_file = [InputMediaDocument(i, filename=j) for i, j in zip(segments, segments_name)]
+    # send_file.append(InputMediaDocument(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8'),
+    #                                     filename=f"{ugoira_file_name.split('.', 1)[0]}_meta.txt"))
+
+    multi_send_file = [[InputMediaDocument(i, filename=j)] for i, j in zip(segments, segments_name)]
+    if len(segments[-1]) + len(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8')) < max_size:
+        multi_send_file[-1].append(InputMediaDocument(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8'),
+                                                      filename=f"{ugoira_file_name.split('.', 1)[0]}_meta.txt"))
+    else:
+        multi_send_file.append([InputMediaDocument(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8'),
+                                                   filename=f"{ugoira_file_name.split('.', 1)[0]}_meta.txt")])
 
     if config.gif_preview:
         if file_path:
@@ -158,8 +177,8 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
             preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
             thumbnail = preview_image[0]['file']
         gif = await pixiv.get_ugoira_gif(ugoira_src, ugoira_meta, config.tmp_path)
-        await send_medias(illust.id, 0, session, context, gif, send_file, introduce, True, have_sent, spoiler,
-                          thumbnail=thumbnail)
+        await send_medias(illust.id, 0, session, context, gif, None, introduce, True, have_sent, spoiler,
+                          thumbnail=thumbnail, multi_send_file=multi_send_file)
     else:
         if file_path:
             async with aiofiles.open(
@@ -169,7 +188,7 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
         else:
             preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
             send_preview = [InputMediaPhoto(preview_image[0]['file'], has_spoiler=spoiler)]
-        await send_medias(illust.id, 0, session, context, send_preview, send_file, introduce, False, have_sent)
+        await send_medias(illust.id, 0, session, context, send_preview, None, introduce, False, have_sent, spoiler, multi_send_file=multi_send_file)
 
     illust.backup = 1
     illust.saved = 1
