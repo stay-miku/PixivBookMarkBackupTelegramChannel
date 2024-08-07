@@ -140,7 +140,7 @@ async def send_manga(illust: db.Illust, session: sqlalchemy.orm.Session, context
 
 
 async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE,
-                      have_sent: List, file_path="", max_size=1024 * 1024 * 50):
+                      have_sent: List, file_path="", max_size=1024 * 1024 * 49):
     if file_path:
         ugoira = await get_ugoira_from_file(file_path)
     else:
@@ -151,6 +151,7 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
     ugoira_file_name = ugoira['file_name']
 
     segments, segments_name = zip_divide_file(ugoira_src, ugoira_file_name, max_size)
+    logger.debug(f"segments size: {[len(i) for i in segments]}")
 
     spoiler = 'R-18' in illust.tags
 
@@ -188,7 +189,8 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
         else:
             preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
             send_preview = [InputMediaPhoto(preview_image[0]['file'], has_spoiler=spoiler)]
-        await send_medias(illust.id, 0, session, context, send_preview, None, introduce, False, have_sent, spoiler, multi_send_file=multi_send_file)
+        await send_medias(illust.id, 0, session, context, send_preview, None, introduce, False
+                          , have_sent, spoiler, multi_send_file=multi_send_file)
 
     illust.backup = 1
     illust.saved = 1
