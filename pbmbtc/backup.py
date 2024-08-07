@@ -63,6 +63,7 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
                                        , pool_timeout=600, read_timeout=600, write_timeout=600
                                        , connect_timeout=600)
         elif multi_send_file:
+            logger.debug(f"send_medias: send multi file length: {len(multi_send_file)}")
             file_message = []
             for i in multi_send_file:
                 file_message += await retry(context.bot.sendMediaGroup, 5, 0, chat_id=channel, media=i,
