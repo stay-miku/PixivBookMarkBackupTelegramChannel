@@ -8,7 +8,8 @@ from . import db
 from . import config
 from telegram.ext import ContextTypes
 from telegram import InputMediaPhoto, InputMediaDocument, Message
-from .utils import retry, compress_image_if_needed, format_tags, get_illust_from_file, get_ugoira_from_file, divide_pages
+from .utils import retry, compress_image_if_needed, format_tags, get_illust_from_file, get_ugoira_from_file, \
+    divide_pages, zip_divide_file
 from . import pixiv
 from typing import Dict, List, Union, Tuple
 import traceback
@@ -53,14 +54,13 @@ async def send_medias(illust: str, page, session: sqlalchemy.orm.Session, contex
                                           , pool_timeout=600, read_timeout=600, write_timeout=600
                                           , connect_timeout=600)
             have_sent.append({"message_id": preview_message.message_id, "channel": channel})
-            preview_message = [preview_message]         # 对下面reply_to_message_id=preview_message[0]的兼容
+            preview_message = [preview_message]  # 对下面reply_to_message_id=preview_message[0]的兼容
 
         file_message = await retry(context.bot.sendMediaGroup, 5, 0, chat_id=channel, media=send_file,
                                    reply_to_message_id=preview_message[0].message_id
                                    , pool_timeout=600, read_timeout=600, write_timeout=600
                                    , connect_timeout=600)
         have_sent += [{"message_id": i.message_id, "channel": channel} for i in file_message]
-
 
         for i in range(len(preview_message)):
             m = preview_message[i]
@@ -109,7 +109,7 @@ async def send_illust(illust: db.Illust, session: sqlalchemy.orm.Session, contex
 
     for page in pages:
         logger.debug(f"send page: size: {page['size']}, page: {page['page']}, page_count: {len(page['illusts'])}")
-        if page["size"] >= 1024*1024*50:
+        if page["size"] >= 1024 * 1024 * 50:
             raise Exception("page size > 50MB")
         await send_one_page(illust, session, context, page["illusts"], page["page"], have_sent)
 
@@ -129,7 +129,7 @@ async def send_manga(illust: db.Illust, session: sqlalchemy.orm.Session, context
 
 
 async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, context: ContextTypes.DEFAULT_TYPE,
-                      have_sent: List, file_path=""):
+                      have_sent: List, file_path="", max_size=1024 * 1024 * 50):
     if file_path:
         ugoira = await get_ugoira_from_file(file_path)
     else:
@@ -139,25 +139,31 @@ async def send_ugoira(illust: db.Illust, session: sqlalchemy.orm.Session, contex
     ugoira_src = ugoira['file']
     ugoira_file_name = ugoira['file_name']
 
+    segments, segments_name = zip_divide_file(ugoira_src, ugoira_file_name, max_size)
+
     spoiler = 'R-18' in illust.tags
 
     introduce = get_introduce(illust)
-    send_file = [InputMediaDocument(ugoira_src, filename=ugoira_file_name),
-                 InputMediaDocument(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8'),
-                                    filename=f"{ugoira_file_name.split('.', 1)[0]}_meta.txt")]
+    send_file = [InputMediaDocument(i, filename=j) for i, j in zip(segments, segments_name)]
+    send_file.append(InputMediaDocument(json.dumps(ugoira_meta, ensure_ascii=False).encode('utf-8'),
+                                        filename=f"{ugoira_file_name.split('.', 1)[0]}_meta.txt"))
+
     if config.gif_preview:
         if file_path:
-            async with aiofiles.open(os.path.join(file_path, "images", os.listdir(os.path.join(file_path, "images"))[0]), "rb") as f:
+            async with aiofiles.open(
+                    os.path.join(file_path, "images", os.listdir(os.path.join(file_path, "images"))[0]), "rb") as f:
                 preview_image = await f.read()
             thumbnail = preview_image
         else:
             preview_image = await retry(pixiv.get_illust, 5, 0, u_cookie=config.cookie, pid=illust.id)
             thumbnail = preview_image[0]['file']
         gif = await pixiv.get_ugoira_gif(ugoira_src, ugoira_meta, config.tmp_path)
-        await send_medias(illust.id, 0, session, context, gif, send_file, introduce, True, have_sent, spoiler, thumbnail=thumbnail)
+        await send_medias(illust.id, 0, session, context, gif, send_file, introduce, True, have_sent, spoiler,
+                          thumbnail=thumbnail)
     else:
         if file_path:
-            async with aiofiles.open(os.path.join(file_path, "images", os.listdir(os.path.join(file_path, "images"))[0]), "rb") as f:
+            async with aiofiles.open(
+                    os.path.join(file_path, "images", os.listdir(os.path.join(file_path, "images"))[0]), "rb") as f:
                 preview_image = await f.read()
             send_preview = [InputMediaPhoto(preview_image, has_spoiler=spoiler)]
         else:
@@ -207,8 +213,8 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
                 # await context.bot.sendMessage(chat_id=config.admin, text="所有收藏均已备份,或者可以强制更新一次收藏列表")
                 return
             error_illust_id = illust.id
-            illust.backup = 1               # 防止多个任务重复出现操作同一备份对象
-            session.flush()                 # 其实这个没这个作用,防止同时操作由判断数据库是否被锁来处理了
+            illust.backup = 1  # 防止多个任务重复出现操作同一备份对象
+            session.flush()  # 其实这个没这个作用,防止同时操作由判断数据库是否被锁来处理了
 
             if illust.unavailable == 1:
                 await send_unavailable(illust, context, session, have_sent)
@@ -239,7 +245,8 @@ async def send_backup(illust_id: Union[str, None], context: ContextTypes.DEFAULT
             logger.debug(f"delete message: {m}")
         logger.error(f"error: {e}")
         traceback.print_exception(type(e), e, e.__traceback__)
-        await retry(context.bot.sendMessage, 5, 0, chat_id=config.admin, text=f"发生错误: {e}, illust: {error_illust_id}")
+        await retry(context.bot.sendMessage, 5, 0, chat_id=config.admin,
+                    text=f"发生错误: {e}, illust: {error_illust_id}")
 
 
 async def send_backup_from_file(illust_id: str, file_path: str, context: ContextTypes.DEFAULT_TYPE):

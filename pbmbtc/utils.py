@@ -184,3 +184,26 @@ def divide_pages(illusts: List[Dict], max_size=1024*1024*50, max_count=10):
 
     return illust_pages
 
+
+# 对zip文件分卷
+def zip_divide_file(file: bytes, file_name: str, max_size=1024*1024*50):
+
+    if len(file) < max_size:
+        return [file], [file_name]
+
+    if not file.startswith(b'PK\x03\x04'):
+        raise ValueError("not a zip file")
+
+    in_memory_zip = io.BytesIO(file)
+
+    segments = []
+
+    while True:
+        segment = in_memory_zip.read(max_size)
+        if not segment:
+            break
+        segments.append(segment)
+
+    segments_name = [file_name + f".{i + 1:03d}" for i in range(len(segments))]
+
+    return segments, segments_name
