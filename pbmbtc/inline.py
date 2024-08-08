@@ -10,7 +10,7 @@ logger = logging.getLogger("inline")
 
 
 domain = 'pixiv.mikudesu.best'
-max_size = '3MB'
+max_size = '1MB'
 
 
 async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
