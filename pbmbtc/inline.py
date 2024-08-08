@@ -74,6 +74,8 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         keyboards.append(InlineKeyboardButton("channel", url=f"https://t.me/c/{channel[4:]}/{message_id}"))
 
+    logger.debug(f"inline query: pid: {pid}, page: {page}, user_name: {user_name}, title: {title}")
+
     await update.inline_query.answer([
         InlineQueryResultPhoto(
             id=str(uuid4()),
