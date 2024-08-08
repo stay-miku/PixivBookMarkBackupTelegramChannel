@@ -16,6 +16,8 @@ max_size = '3MB'
 async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.inline_query.query
 
+    logger.info(f"inline query: {query}, by {update.effective_user.id}")
+
     if not query:
         query = ""
 
