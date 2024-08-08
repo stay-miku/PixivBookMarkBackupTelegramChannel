@@ -1,3 +1,4 @@
+import json
 import re
 
 from . import db
@@ -100,7 +101,7 @@ async def random_preview(illust_id, limit: int, inline=-1):
             return None, None
 
 
-async def get_illust_info(illust_id):
+async def get_illust_info(illust_id, get_size=False):
     async with db.start_async_session() as session:
         query = select(db.Illust).filter_by(id=illust_id)
 
@@ -108,10 +109,21 @@ async def get_illust_info(illust_id):
 
         result = result_object.scalar()
 
+        if get_size:
+            detail = json.loads(result.detail)
+            width = detail["width"]
+            height = detail["height"]
+            if not isinstance(width, int) or not isinstance(height, int):
+                width, height = 100, 100
+
         if result:
+            if get_size:
+                return result.user_id, result.user_name, result.title, width, height
             return result.user_id, result.user_name, result.title
 
         else:
+            if get_size:
+                return None, None, None, None, None
             return None, None, None
 
 

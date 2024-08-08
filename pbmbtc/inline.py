@@ -56,7 +56,7 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     page = random.randint(0, page_counts - 1)
 
-    user_id, user_name, title = await search_utils.get_illust_info(pid)
+    user_id, user_name, title, width, height = await search_utils.get_illust_info(pid, get_size=True)
 
     keyboards = [InlineKeyboardButton("source", url=f"https://www.pixiv.net/artworks/{pid}")]
 
@@ -83,9 +83,11 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
             thumbnail_url=f"https://{domain}/{pid}-{page}/{max_size}",
             title=title,
             caption=f"{user_name} - {title}",
-            reply_markup=InlineKeyboardMarkup([keyboards])
+            reply_markup=InlineKeyboardMarkup([keyboards]),
+            photo_width=width,
+            photo_height=height
         )
-    ])
+    ], is_personal=True, cache_time=0)
 
 
 
