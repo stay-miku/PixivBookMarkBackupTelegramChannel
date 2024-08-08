@@ -85,7 +85,7 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
             caption=f"{user_name} - {title}",
             reply_markup=InlineKeyboardMarkup([keyboards])
         )
-    ], is_personal=True, cache_time=0)
+    ])
 
 
 
