@@ -1,15 +1,11 @@
 import asyncio
-# import contextvars
-# import functools
 import logging
 
 import telegram
 
-# import time
 from . import config
-from . import update_illust
-from . import update_bookmarks_record
 from . import bot_command
+from . import inline
 
 
 from telegram import __version__ as TG_VER
@@ -27,7 +23,7 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
     )
 
 from telegram import Update, InputMediaPhoto, BotCommand
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, ContextTypes, InlineQueryHandler
 
 
 logger = logging.getLogger("bot")
@@ -102,6 +98,7 @@ async def run_bot():
     application.add_handler(CommandHandler("start_database_backup_task", bot_command.start_db_backup))
     application.add_handler(CommandHandler("stop_database_backup_task", bot_command.stop_db_backup))
     application.add_handler(CommandHandler("sese", bot_command.rand))
+    application.add_handler(InlineQueryHandler(inline.inline_query))
 
 
     # 开始运行bot

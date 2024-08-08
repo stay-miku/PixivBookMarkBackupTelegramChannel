@@ -264,20 +264,19 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"search: user: {update.effective_user.id}, name: {update.effective_user.username}, args: {context.args}")
     try:
         if context.args:
-            a = (" ".join(context.args)).split("|")
-            if len(a) <= 1:
-                tags = re.split(r"[,，]", a[0])
-                black_list = []
-
-            else:
-                tags = re.split(r"[,，]", a[0])
-                black_list = re.split(r"[,，]", a[1])
-
+            tag_str = " ".join(context.args)
         else:
-            tags = []
-            black_list = []
+            tag_str = ""
 
-        random_illust = await search_utils.random_saved_illsust(tags, black_list)
+        if tag_str.isnumeric():
+            tags = [tag_str]
+            black_list = []
+            is_id = True
+        else:
+            tags, black_list = search_utils.extract_tags(tag_str)
+            is_id = False
+
+        random_illust = await search_utils.random_saved_illsust(tags, black_list, is_id=is_id)
 
         if random_illust:
 
@@ -288,7 +287,7 @@ async def rand(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # await context.bot.forwardMessage(chat_id=update.effective_chat.id, from_chat_id=channel
                 #                                  , message_id=message_id)
                 keyboard = [
-                    [telegram.InlineKeyboardButton("origin", url=f"https://www.pixiv.net/artworks/{random_illust[0]}"),
+                    [telegram.InlineKeyboardButton("source", url=f"https://www.pixiv.net/artworks/{random_illust[0]}"),
                      telegram.InlineKeyboardButton("author", url=f"https://www.pixiv.net/users/{user_id}"),
                      telegram.InlineKeyboardButton("channel", url=f"https://t.me/c/{channel[4:]}/{message_id}")]
                 ]
