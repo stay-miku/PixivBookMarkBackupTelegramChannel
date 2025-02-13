@@ -29,8 +29,8 @@ async def cookie_verify(cookie: str):
     if response.status_code != 200:
         raise Exception(f"Cookie verify: Error status code{response.status_code}")
     http = response.content.decode("utf-8")
-    content = etree.HTML(http).xpath("//meta[@name=\"global-data\"]/@content")
-    user_data = json.loads(content[0])["userData"]
+    content = etree.HTML(http).xpath("//script[@id=\"__NEXT_DATA__\"]/text()")
+    user_data = json.loads(content[0])["props"]["pageProps"]["userData"]
     if user_data is None:
         return None
     logger.debug(f"userId: {user_data['id']}, userName: {user_data['pixivId']}")
