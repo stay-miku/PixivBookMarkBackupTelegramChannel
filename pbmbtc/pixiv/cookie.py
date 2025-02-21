@@ -30,7 +30,8 @@ async def cookie_verify(cookie: str):
         raise Exception(f"Cookie verify: Error status code{response.status_code}")
     http = response.content.decode("utf-8")
     content = etree.HTML(http).xpath("//script[@id=\"__NEXT_DATA__\"]/text()")
-    user_data = json.loads(content[0])["props"]["pageProps"]["userData"]
+    preload_state = json.loads(content[0])["props"]["pageProps"]["serverSerializedPreloadedState"]
+    user_data = json.loads(preload_state)["userData"]["self"]
     if user_data is None:
         return None
     logger.debug(f"userId: {user_data['id']}, userName: {user_data['pixivId']}")
